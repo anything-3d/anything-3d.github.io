@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<title>AnyThing 3D</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: build-plate grid. Wordmark "prints" in layer lines, then a dense, even gallery grid with spec lines like a slicer readout. */
+:root {
+  --plate: #EDEFF3;      /* page ground, cool build-plate grey */
+  --surface: #FFFFFF;
+  --ink: #161A24;
+  --ink-soft: #545B6B;
+  --line: #D5D9E1;
+  --accent: #2F4BE0;     /* cobalt nozzle-blue */
+  --accent-ink: #FFFFFF;
+  --pei: #B8873A;        /* textured PEI gold, used sparingly */
+  --ph-a: rgba(22,26,36,.06);
+
+  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --step--1: .8125rem; --step-0: 1rem; --step-1: 1.25rem; --step-2: 1.75rem; --step-3: 2.5rem;
+  --gutter: clamp(16px, 4vw, 48px);
+  --max: 1240px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --plate: #101218; --surface: #181B24; --ink: #E8EAF0; --ink-soft: #9AA1B2;
+    --line: #2A2F3C; --accent: #7D93FF; --accent-ink: #0C0F1A; --pei: #D4A55A; --ph-a: rgba(255,255,255,.05);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plate: #101218; --surface: #181B24; --ink: #E8EAF0; --ink-soft: #9AA1B2;
+  --line: #2A2F3C; --accent: #7D93FF; --accent-ink: #0C0F1A; --pei: #D4A55A; --ph-a: rgba(255,255,255,.05);
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+body { background: var(--plate); color: var(--ink); font-family: var(--f-body); font-size: var(--step-0); line-height: 1.55; }
+.wrap { max-width: var(--max); margin-inline: auto; padding-inline: var(--gutter); }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: .01em; }
+.label { font-family: var(--f-mono); font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--plate) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+.brand { font-family: var(--f-display); font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--ink); letter-spacing: -.01em; }
+.brand span { color: var(--accent); }
+nav.links { display: flex; gap: 24px; align-items: center; }
+nav.links a { color: var(--ink-soft); text-decoration: none; font-weight: 500; }
+nav.links a:hover { color: var(--ink); }
+.cart-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ink); background: transparent; padding: 8px 14px; border-radius: 999px; font-weight: 600; }
+.cart-btn .count { font-family: var(--f-mono); background: var(--ink); color: var(--plate); border-radius: 999px; min-width: 22px; padding: 0 6px; font-size: .75rem; line-height: 22px; text-align: center; }
+@media (max-width: 640px) { nav.links a { display: none; } }
+
+/* Hero */
+.hero { padding-block: clamp(48px, 9vw, 112px) clamp(32px, 6vw, 72px); }
+.wordmark {
+  font-family: var(--f-display); font-weight: 800; line-height: .92; letter-spacing: -.035em;
+  font-size: clamp(3.2rem, 13vw, 10.5rem);
+  background: repeating-linear-gradient(to bottom, var(--ink) 0 5px, transparent 5px 6.5px);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.wordmark .three { background: repeating-linear-gradient(to bottom, var(--accent) 0 5px, transparent 5px 6.5px); -webkit-background-clip: text; background-clip: text; }
+@media (prefers-reduced-motion: no-preference) {
+  .wordmark { animation: print 1.6s steps(24, end) both; }
+}
+@keyframes print { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+/* All text "prints" in layer by layer like the wordmark, once, as it scrolls into view */
+@media (prefers-reduced-motion: no-preference) {
+  .print-in { animation: print .9s steps(14, end) both; }
+  h2.print-in, .hero-loc.print-in { animation-duration: 1.2s; animation-timing-function: steps(20, end); }
+}
+.hero-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-top: 28px; }
+.tagline { font-size: var(--step-1); max-width: 34ch; margin: 0; }
+.hero-cta { display: inline-flex; align-items: center; gap: 10px; background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 600; padding: 14px 22px; border-radius: 999px; }
+.readout { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); }
+.readout div { display: flex; flex-direction: column; gap: 2px; }
+.readout b { font-family: var(--f-mono); font-weight: 500; font-size: .9375rem; }
+
+/* Gallery */
+.section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.section-head h2 { font-family: var(--f-display); font-weight: 700; font-size: var(--step-3); letter-spacing: -.02em; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface); padding: 7px 14px; border-radius: 999px; font-weight: 500; font-size: .9375rem; }
+.chip[aria-pressed="true"] { background-color: var(--ink); color: var(--plate); border-color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.photo { position: relative; aspect-ratio: 4 / 4.2; max-width: 100%; background: var(--plate); overflow: hidden; }
+/* Product photos are cut-outs (transparent PNG/WebP): the object floats on the layer-line plate */
+.photo img { position: relative; z-index: 0; width: 100%; height: 100%; object-fit: contain; padding: 12%; display: block; filter: drop-shadow(0 10px 14px rgba(0,0,0,.22)); }
+.photo:has(img) { background: repeating-linear-gradient(to bottom, var(--ph-a) 0 3px, transparent 3px 6px), var(--plate); }
+.photo .ph {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background:
+    repeating-linear-gradient(to bottom, var(--ph-a) 0 3px, transparent 3px 6px),
+    radial-gradient(circle at 50% 60%, color-mix(in srgb, var(--c) 55%, transparent) 0 28%, transparent 29%);
+}
+.photo .ph::after { content: ""; width: 38%; aspect-ratio: 1; border-radius: 50% 50% 8px 8px; background: repeating-linear-gradient(to bottom, var(--c) 0 3px, color-mix(in srgb, var(--c) 70%, #000) 3px 4px); opacity: .85; }
+.photo .tag { position: absolute; left: 12px; top: 12px; z-index: 1; font-family: var(--f-mono); font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; background: var(--surface); color: var(--ink-soft); padding: 4px 8px; border-radius: 6px; }
+.photo .tag.sample { left: auto; right: 12px; color: var(--pei); }
+.card-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card-title { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card-title h3 { font-size: 1.0625rem; font-weight: 600; }
+.price { font-family: var(--f-mono); font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.spec { color: var(--ink-soft); }
+.swatches { display: flex; gap: 8px; align-items: center; }
+.sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--ink-soft); padding: 0; background: var(--c); }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.sw-name { font-size: .8125rem; color: var(--ink-soft); }
+/* Location next to the logo and under the wordmark */
+.brand-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.loc-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--pei); color: #1A1306; font-weight: 700; font-size: .875rem; padding: 5px 12px 5px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: .01em; }
+.hero-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 18px 0 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 4.5vw, 3rem); letter-spacing: -.02em; line-height: 1.1; color: var(--pei); text-wrap: balance; }
+.hero-loc svg { width: .9em; height: .9em; flex: none; }
+.hero-loc small { font-family: var(--f-mono); font-weight: 500; font-size: max(.8125rem, .3em); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+@media (max-width: 420px) { .brand { font-size: .9375rem; } .loc-pill { font-size: .8125rem; padding: 4px 10px 4px 8px; } }
+
+/* Pickup bar, cart total, in-cart state */
+.pickup-bar { background: var(--ink); color: var(--plate); font-size: .875rem; }
+.pickup-bar .wrap { display: flex; align-items: center; gap: 8px; padding-block: 8px; justify-content: center; text-align: center; }
+.pickup-bar svg { flex: none; color: var(--pei); }
+.cart-btn.has-items { background-color: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.cart-btn.has-items .count { background: var(--accent-ink); color: var(--accent); }
+.cart-total { font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.cart-btn.bump { animation: bump .35s ease; }
+@keyframes bump { 50% { transform: scale(1.08); } }
+.photo .in-cart { position: absolute; right: 12px; top: 12px; z-index: 1; background: var(--accent); color: var(--accent-ink); font-family: var(--f-mono); font-size: .75rem; font-weight: 500; padding: 4px 9px; border-radius: 999px; }
+.card.in { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.stepper { margin-top: auto; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; border: 1px solid var(--accent); border-radius: 10px; overflow: hidden; }
+.stepper button { border: 0; background: var(--accent); color: var(--accent-ink); height: 42px; font-size: 1.25rem; font-weight: 600; }
+.stepper button:hover { filter: brightness(1.1); }
+.stepper .mid { text-align: center; line-height: 1.25; padding: 4px; }
+.stepper .mid b { display: block; font-weight: 600; }
+.stepper .mid small { color: var(--ink-soft); font-size: .75rem; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--plate); padding: 12px 18px; border-radius: 12px; font-size: .9375rem; max-width: calc(100% - 32px); text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.toast small { display: block; color: var(--pei); font-weight: 600; margin-top: 2px; }
+.pickup-box { display: flex; gap: 10px; align-items: flex-start; background: var(--ink); color: var(--plate); border-radius: 10px; padding: 12px 14px; font-size: .9375rem; }
+.pickup-box svg { flex: none; color: var(--pei); margin-top: 2px; }
+.add { margin-top: auto; border: 1px solid var(--ink); background: transparent; border-radius: 10px; padding: 10px; font-weight: 600; }
+
+/* Custom order */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+form.order select { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); color: var(--ink); }
+.photo .ph.custom-ph { background: repeating-linear-gradient(to bottom, var(--ph-a) 0 3px, transparent 3px 6px); }
+.photo .ph.custom-ph::after { content: "?"; display: grid; place-items: center; width: 42%; border-radius: 16px; background: transparent; border: 2px dashed var(--c); color: var(--c); font-family: var(--f-display); font-weight: 800; font-size: 4rem; opacity: 1; }
+.price.ask { font-size: .8125rem; color: var(--ink-soft); }
+.swatches { flex-wrap: wrap; }
+.add.custom-btn { color: var(--plate); }
+.add.custom-btn:hover { border-color: var(--accent); }
+footer a { color: var(--accent); }
+.gallery-note { margin: -8px 0 20px; color: var(--ink-soft); max-width: 70ch; }
+.gallery-note strong { color: var(--ink); }
+.note-line { font-size: .8125rem; color: var(--ink-soft); margin-top: -4px; }
+.credit { font-size: .75rem; color: var(--ink-soft); text-decoration: none; margin-top: -6px; }
+.credit:hover { color: var(--accent); text-decoration: underline; }
+a.primary.send { display: block; text-align: center; text-decoration: none; }
+a.primary.wa { background-color: #1F8F4E; color: #FFFFFF; }
+a.primary.ms { background-color: #0866FF; color: #FFFFFF; }
+@media (max-width: 420px) { .pair { grid-template-columns: 1fr; } }
+
+/* How ordering works */
+.how { padding-block: clamp(56px, 8vw, 96px); }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 0; border-top: 1px solid var(--ink); counter-reset: s; }
+.step { padding: 18px 20px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.step .n { font-family: var(--f-mono); color: var(--accent); font-size: .8125rem; }
+.step h3 { font-family: var(--f-display); font-weight: 500; font-size: 1.0625rem; }
+.step p { margin: 0; color: var(--ink-soft); max-width: 30ch; }
+
+footer { border-top: 1px solid var(--line); padding-block: 28px 40px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--ink-soft); }
+
+/* Cart drawer */
+.scrim { position: fixed; inset: 0; background: rgba(8,10,16,.45); z-index: 40; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(100%, 420px); background: var(--surface); z-index: 50; display: flex; flex-direction: column; border-left: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.drawer-head h2 { font-family: var(--f-display); font-weight: 700; font-size: 1.125rem; }
+.x { border: 0; background: transparent; font-size: 1.5rem; line-height: 1; padding: 4px 8px; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+.line-item { display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.line-item .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
+.line-item small { display: block; color: var(--ink-soft); }
+.qty { display: inline-flex; align-items: center; gap: 4px; }
+.qty button { border: 1px solid var(--line); background: var(--plate); border-radius: 6px; width: 28px; height: 28px; }
+.qty span { font-family: var(--f-mono); min-width: 22px; text-align: center; }
+.qty .del { width: auto; padding: 0 8px; margin-left: 6px; font-size: .75rem; color: var(--ink-soft); }
+.line-item { grid-template-columns: 14px 1fr; }
+.line-item .qty { grid-column: 2; }
+.empty { color: var(--ink-soft); padding-block: 24px; }
+.total { display: flex; justify-content: space-between; font-weight: 600; padding-top: 4px; }
+.total .price { font-size: 1.125rem; }
+form.order { display: flex; flex-direction: column; gap: 12px; }
+form.order label { display: flex; flex-direction: column; gap: 4px; font-size: .875rem; font-weight: 500; }
+form.order input, form.order textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); color: var(--ink); }
+.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 12px; font-weight: 600; }
+.summary { white-space: pre-wrap; background: var(--plate); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0; max-height: 220px; overflow: auto; }
+.note { font-size: .875rem; color: var(--ink-soft); margin: 0; }
+
+/* Button hover: buttons slowly grow and change color */
+.add, .primary, .hero-cta, .cart-btn, .chip, .stepper button, nav.links a {
+  transition: transform .5s cubic-bezier(.22, 1, .36, 1), box-shadow .5s ease, background-color .35s ease, color .35s ease, border-color .35s ease, filter .35s ease;
+}
+nav.links a { display: inline-block; }
+.add:hover, .primary:hover, .hero-cta:hover, .cart-btn:hover, .chip:hover { transform: scale(1.1); box-shadow: 0 12px 24px -12px rgba(0, 0, 0, .45); }
+.add:hover, .primary:hover { transform: scale(1.06); }
+nav.links a:hover { transform: scale(1.12); color: var(--accent); }
+.stepper button:hover { transform: scale(1.18); filter: brightness(.85); }
+
+/* Hover colors */
+.add:hover { background-color: var(--ink); color: var(--plate); border-color: var(--ink); }
+.add.custom-btn, .add.custom-btn:hover { border-color: var(--ink); }
+.add.custom-btn { background-color: var(--ink); color: var(--plate); }
+.add.custom-btn:hover { background-color: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.primary:hover, .hero-cta:hover, .cart-btn.has-items:hover { background-color: color-mix(in srgb, var(--accent) 80%, #000); border-color: color-mix(in srgb, var(--accent) 80%, #000); }
+.cart-btn:not(.has-items):hover { background-color: var(--ink); color: var(--plate); }
+.cart-btn:not(.has-items):hover .count { background: var(--plate); color: var(--ink); }
+.chip:hover { background-color: color-mix(in srgb, var(--accent) 16%, var(--surface)); border-color: var(--accent); }
+.chip[aria-pressed="true"]:hover { background-color: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+a.primary.wa:hover { background-color: #157038; }
+a.primary.ms:hover { background-color: #0550C8; }
+
+.add:active, .primary:active, .hero-cta:active, .cart-btn:active, .chip:active, nav.links a:active { transform: scale(.97); box-shadow: none; transition-duration: .12s; }
+.stepper button:active { transform: scale(.92); transition-duration: .12s; }
+.sw { transition: transform .45s cubic-bezier(.22, 1, .36, 1); }
+.sw:hover { transform: scale(1.25); }
+@media (prefers-reduced-motion: reduce) {
+  .add, .primary, .hero-cta, .cart-btn, .chip, .stepper button, nav.links a, .sw { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+  .add:hover, .primary:hover, .hero-cta:hover, .cart-btn:hover, .chip:hover, nav.links a:hover, .stepper button:hover, .sw:hover { transform: none; }
+}
+</style>
+
+<header class="top">
+  <div class="pickup-bar">
+    <div class="wrap">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+      <span><strong>Pickup only in Almere.</strong> We don't ship. Only order if you can pick up in Almere.</span>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="brand-wrap">
+      <a class="brand" href="#">AnyThing <span>3D</span></a>
+      <span class="loc-pill"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>Almere, Netherlands</span>
+    </div>
+    <nav class="links">
+      <a href="#gallery">Gallery</a>
+      <a href="#gallery" data-open-custom>Custom order</a>
+      <a href="#how">How ordering works</a>
+      <button class="cart-btn" id="openCart" type="button" aria-label="Open cart">Cart <span class="count" id="cartCount">0</span><span class="cart-total" id="cartTotal" hidden></span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1 class="wordmark" aria-label="AnyThing 3D, Almere, Netherlands">AnyThing<br><span class="three">3D</span></h1>
+    <p class="hero-loc"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg><span>Almere, Netherlands</span><small>Pickup only · no shipping</small></p>
+    <div class="hero-row">
+      <p class="tagline">Prints made to order, layer by layer. Pick a piece and a filament color, or ask for something custom. Pick it up in Almere.</p>
+      <a class="hero-cta" href="#gallery">Browse the gallery ↓</a>
+    </div>
+    <div class="readout">
+      <div><span class="label">Material</span><b>PLA · 11 colors</b></div>
+      <div><span class="label">Layer height</span><b>0.12 – 0.28 mm</b></div>
+      <div><span class="label">Max build</span><b>256 × 256 × 256 mm</b></div>
+      <div><span class="label">Turnaround</span><b>3 – 5 days</b></div>
+      <div><span class="label">Pickup</span><b>Almere only · no shipping</b></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="gallery">
+    <div class="section-head">
+      <h2>Gallery</h2>
+      <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+    </div>
+    <p class="gallery-note">Prices are for the 3D printed parts only. Extra things like key rings, screws, magnets or string are <strong>not included</strong>, unless they are printed.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="how wrap" id="how">
+    <div class="section-head"><h2>How ordering works</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">01</span><h3>Choose</h3><p>Add prints to your cart, or describe a custom print.</p></div>
+      <div class="step"><span class="n">02</span><h3>Message us</h3><p>Send your request to us on WhatsApp or Messenger. It's already written for you.</p></div>
+      <div class="step"><span class="n">03</span><h3>Confirm</h3><p>We reply with the final price and the pickup point in Almere.</p></div>
+      <div class="step"><span class="n">04</span><h3>Print &amp; pick up</h3><p>Your pieces go on the printer. Pick them up in Almere, usually within 3 to 5 days.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© AnyThing 3D</span>
+    <span>Pickup in Almere only · Find us on <a data-fb href="#" target="_blank" rel="noopener">Facebook Marketplace</a></span>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Cart">
+  <div class="drawer-head"><h2 id="drawerTitle">Your cart</h2><button class="x" id="closeCart" type="button" aria-label="Close cart">×</button></div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script>
+/* Product photos */
+const IMAGES = {"airtag": "images/airtag.png", "axolotl": "images/axolotl.png", "card": "images/card.png", "cardbox": "images/cardbox.png", "cat": "images/cat.png", "cattoy": "images/cattoy.png", "chess": "images/chess.png", "coaster": "images/coaster.png", "cookie": "images/cookie.png", "dice": "images/dice.png", "dragon": "images/dragon.png", "egg": "images/egg.png", "fcube": "images/fcube.png", "feeder": "images/feeder.png", "fidget": "images/fidget.png", "fox": "images/fox.png", "gearshift": "images/gearshift.png", "gridfinity": "images/gridfinity.png", "headset": "images/headset.png", "hook": "images/hook.png", "hphook": "images/hphook.png", "illusion": "images/illusion.png", "jeep": "images/jeep.png", "katana": "images/katana.png", "keycat": "images/keycat.png", "keys": "images/keys.png", "label": "images/label.png", "maze": "images/maze.png", "octopus": "images/octopus.png", "pencil": "images/pencil.png", "phone": "images/phone.png", "pillars": "images/pillars.png", "planter": "images/planter.png", "poobag": "images/poobag.png", "sdcard": "images/sdcard.png", "shark": "images/shark.png", "skull": "images/skull.png", "snake": "images/snake.png", "spice": "images/spice.png", "spinner": "images/spinner.png", "toothbrush": "images/toothbrush.png", "trex": "images/trex.png", "twisty": "images/twisty.png", "vase": "images/vase.png", "whistle": "images/whistle.png", "winder": "images/winder.png", "xbox": "images/xbox.png"};
+</script>
+<script>
+/* ===== SHOP SETTINGS — edit these ===== */
+const CURRENCY = "€";
+const FACEBOOK_NAME = "AnyThing 3D";                         // name customers look for on Facebook
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61594906215769"; // your AnyThing 3D Facebook Page
+const WHATSAPP_NUMBER = "31617614793";                       // country code + number, digits only
+const MESSENGER_URL = "https://m.me/61594906215769";          // Messenger chat with your Page
+
+/* ===== PRODUCTS — edit, add, or remove. Put photos in /images and set image: "images/name.jpg" ===== */
+/* Your PLA filament colors */
+const COLORS = {
+  Black: "#22252B", White: "#ECEDEF", Gray: "#8A909C", Silver: "#B9BEC6", Gold: "#C9A04A", Yellow: "#F2C21B",
+  Brown: "#7A4E2D", "Maroon Red": "#8E1F2F", Pink: "#EE8FB8", Cyan: "#1FB5C9", Green: "#2E8B4F"
+};
+/* ===== PRICING — prices are calculated from these. Change a number and every price updates. =====
+   Print time and filament weight come from each model's MakerWorld print profile. */
+const PRICING = {
+  filamentPerKg: 20.00,   // € per 1 kg spool of PLA
+  wasteFactor: 1.10,      // +10% for purge, supports and failed prints
+  printerWatts: 95,       // Bambu Lab A1 average power while printing PLA
+  electricityKwh: 0.28,   // € per kWh
+  wearPerHour: 0.10,      // € per print hour for nozzle, build plate and parts
+  markup: 3.0,            // selling price = cost × markup
+  minimum: 4.99,          // lowest price for any item
+};
+function costOf(p) {
+  const filament = p.grams * PRICING.wasteFactor / 1000 * PRICING.filamentPerKg;
+  const electricity = p.hours * PRICING.printerWatts / 1000 * PRICING.electricityKwh;
+  const wear = p.hours * PRICING.wearPerHour;
+  return filament + electricity + wear;
+}
+/* Markup applies to the print; bought parts (p.extra, like an LED light) are added at cost */
+const priceOf = p => Math.max(PRICING.minimum, Math.ceil(costOf(p) * PRICING.markup + (p.extra || 0)) - 0.01);
+const fmtTime = h => `${Math.floor(h)}h ${String(Math.round((h % 1) * 60)).padStart(2, "0")}m`;
+
+const PRODUCTS = [
+  { id: "katana", name: "Collapsing Katana", cat: "Toys", hours: 3.36, grams: 113, size: "Slides open and shut", colors: ["Green", "Black", "Silver", "Maroon Red"], image: IMAGES["katana"], by: "mail.iou", mw: "1516584-collapsing-katana-fa-ren-forbearance-blade" },
+  { id: "fidget", name: "Gear Fidget Cube", cat: "Toys", hours: 4.38, grams: 63, size: "Turning gears", colors: ["Black", "Yellow", "Cyan", "Maroon Red"], image: IMAGES["fidget"], by: "3DEvan", mw: "900823-fidget-gear-cube" },
+  { id: "octopus", name: "Mini Octopus", cat: "Toys", hours: 1.59, grams: 22, colors: ["Pink", "Cyan", "Yellow", "Green"], image: IMAGES["octopus"], by: "mcgybeer", mw: "13859-cute-mini-octopus" },
+  { id: "snake", name: "Cute Snake", cat: "Toys", hours: 0.29, grams: 3, colors: ["Green", "Yellow", "Pink", "Cyan"], image: IMAGES["snake"], by: "Amanda Roos", mw: "1925739-cute-snakey-free-to-sell-no-ams" },
+  { id: "spinner", name: "Planetary Gear Fidget Spinner", cat: "Toys", hours: 1.31, grams: 19, colors: ["Black", "Silver", "Cyan", "Gold"], image: IMAGES["spinner"], by: "G-Man Projects", mw: "654785-planetary-gears-finger-fidget-spinners" },
+  { id: "cat", name: "Flexi Cat Keychain", cat: "Toys", hours: 0.54, grams: 8, colors: ["White", "Black", "Gray", "Pink"], image: IMAGES["cat"], by: "Fluffy Tails", mw: "2459711-fluffy-tail-cute-flexi-cat-toy-keychain", note: "Key ring not included" },
+  { id: "axolotl", name: "Flexi Axolotl", cat: "Toys", hours: 0.42, grams: 8, colors: ["Pink", "Cyan", "Yellow", "White"], image: IMAGES["axolotl"], by: "3DeepDesigns", mw: "831088-flexi-axolotl-keychain-no-supports", note: "Key ring not included" },
+  { id: "shark", name: "Articulated Shark", cat: "Toys", hours: 1.23, grams: 21, colors: ["Gray", "Cyan", "Black"], image: IMAGES["shark"], by: "mcgybeer", mw: "463778-articulated-shark" },
+  { id: "fcube", name: "Angled Fidget Cube", cat: "Toys", hours: 1.39, grams: 32, colors: ["Cyan", "Yellow", "Black", "Maroon Red"], image: IMAGES["fcube"], by: "Austin Vojta", mw: "65426-fidget-cube-toy-angled" },
+  { id: "illusion", name: "Magic Illusion Spinner", cat: "Toys", hours: 0.88, grams: 13, colors: ["Black", "White", "Gold"], image: IMAGES["illusion"], by: "AeroDesigns", mw: "2247117-magic-illusion-spinner" },
+  { id: "jeep", name: "Jeep Kit Card", cat: "Toys", hours: 0.76, grams: 10, colors: ["Green", "Yellow", "Black", "Gray"], image: IMAGES["jeep"], by: "agepbiz", mw: "223303-jeep-kit-card" },
+  { id: "whistle", name: "Bird Whistle", cat: "Toys", hours: 1.07, grams: 23, colors: ["Cyan", "Yellow", "Green", "Pink"], image: IMAGES["whistle"], by: "yongyia3D", mw: "2566446-bird-whistle-add-a-little-water-and-blow-a-re" },
+  { id: "dragon", name: "Articulated Crystal Dragon", cat: "Toys", hours: 4.2, grams: 58, colors: ["Gold", "Silver", "Cyan", "Black"], image: IMAGES["dragon"], by: "Molodos", mw: "424787-articulated-crystal-dragon-v2-fixed" },
+  { id: "trex", name: "Flexi Skeleton T-Rex", cat: "Toys", hours: 3.57, grams: 75, colors: ["White", "Black", "Gold", "Green"], image: IMAGES["trex"], by: "PinkyWings", mw: "1634871-flexi-skeleton-t-rex-dinosaur" },
+  { id: "gearshift", name: "Gear Shift Fidget", cat: "Toys", hours: 0.75, grams: 7, colors: ["Black", "Silver", "Maroon Red"], image: IMAGES["gearshift"], by: "Maker Making", mw: "1548507-gear-shift-fidget-toy-v2-print-in-place" },
+  { id: "planter", name: "Low-Poly Planter", cat: "Home", hours: 1.25, grams: 34, size: "Small succulent pot", colors: ["Black", "White", "Green", "Gray"], image: IMAGES["planter"], by: "KL Worx", mw: "748063-low-poly-planter" },
+  { id: "hook", name: "Wall Hook", cat: "Home", hours: 0.43, grams: 10, colors: ["Black", "White", "Gray"], image: IMAGES["hook"], by: "yekta", mw: "2124904-wall-hook-coat-hanger-towel-rack", note: "Stick-on or screw mount (tape/screws not included)" },
+  { id: "keycat", name: "Cat Key Holder", cat: "Home", hours: 2.28, grams: 35, colors: ["Black", "White", "Brown", "Gray"], image: IMAGES["keycat"], by: "wisetait", mw: "38004-cute-cat-key-holder-plays-hide-and-seek" },
+  { id: "toothbrush", name: "Toothbrush Travel Case", cat: "Home", hours: 1.49, grams: 27, colors: ["White", "Cyan", "Pink", "Gray"], image: IMAGES["toothbrush"], by: "angrelou", mw: "32077-toothbrush-travel-case" },
+  { id: "coaster", name: "Honeycomb Coaster", cat: "Home", hours: 1.7, grams: 48, colors: ["Yellow", "Gold", "Black", "White"], image: IMAGES["coaster"], by: "Anders Gustavsson", mw: "949642-round-honeycomb-coaster" },
+  { id: "headset", name: "Headphone Stand", cat: "Desk", hours: 2.4, grams: 95, size: "Fits most headphones", colors: ["Black", "White", "Silver"], image: IMAGES["headset"], by: "Deltaprints", mw: "515356-design-headphone-stand" },
+  { id: "phone", name: "Phone Stand", cat: "Desk", hours: 1.68, grams: 71, size: "Fits phones and tablets", colors: ["Black", "Pink", "Cyan", "Yellow"], image: IMAGES["phone"], by: "K2 Tech Designs", mw: "819327-phone-stand" },
+  { id: "hphook", name: "Headphone Holder", cat: "Desk", hours: 1.43, grams: 44, colors: ["Black", "White", "Gray"], image: IMAGES["hphook"], by: "ngprint", mw: "231863-headphone-holder-modern-design", note: "Clamps onto your desk" },
+  { id: "pencil", name: "T-Rex Pencil Holder", cat: "Desk", hours: 5.27, grams: 182, colors: ["Green", "Gray", "Black", "Brown"], image: IMAGES["pencil"], by: "Arthalino 3D", mw: "541722-dinosaur-t-rex-pencil-holder" },
+  { id: "winder", name: "Cable Organizer", cat: "Desk", hours: 5.68, grams: 129, colors: ["Black", "Gray", "Cyan"], image: IMAGES["winder"], by: "squinn", mw: "13849-portable-cable-organizer-winder" },
+  { id: "card", name: "Business Card Holder", cat: "Desk", hours: 1.42, grams: 24, colors: ["Black", "White", "Silver", "Gold"], image: IMAGES["card"], by: "SabreDesign", mw: "1638512-business-card-holder" },
+  { id: "xbox", name: "Invisible Controller Stand", cat: "Desk", hours: 0.74, grams: 9, colors: ["Black", "White"], image: IMAGES["xbox"], by: "Luke", mw: "952139-xbox-invisible-stand-holder-controller-origin" },
+  { id: "sdcard", name: "SD Card Storage Box", cat: "Desk", hours: 1.9, grams: 63, colors: ["Black", "Gray", "Cyan", "Yellow"], image: IMAGES["sdcard"], by: "Rugg", mw: "479663-media-storage-container", note: "Hinge needs 6 small M2 screws (not included)" },
+  { id: "cookie", name: "Winter Cookie Cutters", cat: "Kitchen", hours: 6.69, grams: 122, colors: ["White", "Cyan", "Pink"], image: IMAGES["cookie"], by: "Amalthea", mw: "756926-winter-cookie-cutters" },
+  { id: "egg", name: "Egg Holder", cat: "Kitchen", hours: 4.61, grams: 176, colors: ["White", "Gray", "Yellow"], image: IMAGES["egg"], by: "3Dbeast", mw: "705535-egg-holder-upgrade-final-noglue-nosupport" },
+  { id: "spice", name: "Spice Rack", cat: "Kitchen", hours: 3.43, grams: 130, colors: ["White", "Black", "Gray"], image: IMAGES["spice"], by: "imtocxo", mw: "1300164-spice-rack", note: "Wall-mounted (screws not included)" },
+  { id: "dice", name: "Castle Dice Tower", cat: "Games", hours: 8.99, grams: 279, size: "Auto-reload tray", colors: ["Gray", "Brown", "Black"], image: IMAGES["dice"], by: "Rossero", mw: "882272-smash-the-auto-reload-dice-tower", note: "Printed spring included, dice not included" },
+  { id: "cardbox", name: "Playing Card Box", cat: "Games", hours: 1.37, grams: 62, colors: ["Black", "Maroon Red", "Gold", "Cyan"], image: IMAGES["cardbox"], by: "Tsinatas", mw: "2175464-simple-customizable-card-box-parametric", note: "Cards not included" },
+  { id: "maze", name: "Maze Puzzle Box", cat: "Games", hours: 3.62, grams: 82, colors: ["Yellow", "Black", "Cyan", "Gold"], image: IMAGES["maze"], by: "ToodyX", mw: "1666352-maze-puzzle-box-honeycomb-design" },
+  { id: "twisty", name: "Twisty Fidget Ball", cat: "Games", hours: 4.33, grams: 92, colors: ["Cyan", "Pink", "Yellow", "Green"], image: IMAGES["twisty"], by: "Draisaitl29", mw: "2658901-twisty-fidget-ball" },
+  { id: "chess", name: "Roll-Up Travel Chess Set", cat: "Games", hours: 8.12, grams: 157, colors: ["Gold", "White", "Black"], image: IMAGES["chess"], by: "ERAVIA", mw: "899120-minimalist-chess-set-foldable-portable" },
+  { id: "feeder", name: "Modern Bird Feeder", cat: "Garden", hours: 8.84, grams: 166, colors: ["Green", "Brown", "White", "Gray"], image: IMAGES["feeder"], by: "Tord Asnes", mw: "1039770-modern-bird-feeder", note: "Hanging string and bird seed not included" },
+  { id: "label", name: "Garden Plant Labels", cat: "Garden", hours: 0.25, grams: 3, colors: ["Green", "White", "Brown", "Yellow"], image: IMAGES["label"], by: "JB", mw: "881635-customizable-garden-plant-label-sign" },
+  { id: "vase", name: "Spiral Vase", cat: "Decor", hours: 1.45, grams: 52, size: "Decorative, not watertight", colors: ["Cyan", "Pink", "Gold"], image: IMAGES["vase"], by: "MaXiLuPa", mw: "76790-spiral-vase" },
+  { id: "fox", name: "Cute Fox", cat: "Decor", hours: 0.48, grams: 5, colors: ["Brown", "White", "Gold"], image: IMAGES["fox"], by: "Settlers", mw: "432108-cute-fox" },
+  { id: "pillars", name: "Twisting Pillars Vase", cat: "Decor", hours: 1.99, grams: 27, colors: ["Cyan", "White", "Pink", "Gold"], image: IMAGES["pillars"], by: "jwalker55", mw: "138113-twisting-pillars-vase" },
+  { id: "skull", name: "Skull Twist Fidget", cat: "Decor", hours: 4.2, grams: 94, colors: ["White", "Black", "Silver"], image: IMAGES["skull"], by: "FilliFuu", mw: "2232026-branded-skull-twist-fidget" },
+  { id: "gridfinity", name: "Gridfinity Storage Bins", cat: "Gadgets", hours: 6.87, grams: 190, colors: ["Gray", "Black", "Cyan", "Yellow"], image: IMAGES["gridfinity"], by: "ABDELat", mw: "47599-ultimate-gridfinity-bins-collection-parametri" },
+  { id: "airtag", name: "AirTag Keychain Holder", cat: "Gadgets", hours: 0.26, grams: 5, colors: ["White", "Black", "Pink", "Cyan"], image: IMAGES["airtag"], by: "Jonan Seeley", mw: "485942-airtag-keychain-holder", note: "Key ring and AirTag not included" },
+  { id: "cattoy", name: "Cat Toys", cat: "Pets", hours: 1.82, grams: 23, colors: ["Pink", "Yellow", "Cyan"], image: IMAGES["cattoy"], by: "LRB Design", mw: "1129196-print-in-place-cat-toys-v2" },
+  { id: "poobag", name: "Dog Poo Bag Holder", cat: "Pets", hours: 2.39, grams: 77, colors: ["Black", "Green", "Maroon Red"], image: IMAGES["poobag"], by: "MM3D Workshop", mw: "1196761-heavy-duty-dog-poo-bag-carrier-dispenser", note: "Fits standard poo bag rolls (bags not included)" },
+  { id: "keys", name: "Name Keychain", cat: "Custom", hours: 0.73, grams: 8, size: "Your name", colors: ["Pink", "Black", "Green", "Brown"], image: IMAGES["keys"], by: "Pumpkin Studios", mw: "2115391-name-keychain-generator-no-ams", note: "Key ring not included" },
+  /* The custom print card: always last in the gallery, opens the request form */
+  { id: "custom", name: "Your Own Idea", cat: "Custom", custom: true, size: "Up to 256 mm", colors: Object.keys(COLORS), image: "" },
+];
+PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
+/* ====================================== */
+
+const $ = s => document.querySelector(s);
+const money = n => CURRENCY + n.toFixed(2);
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem("a3d-cart") || "[]"); } catch (e) {}
+const save = () => { try { localStorage.setItem("a3d-cart", JSON.stringify(cart)); } catch (e) {} };
+const picked = {};
+let filter = "All";
+
+document.querySelectorAll("[data-fb]").forEach(a => { a.href = FACEBOOK_URL; });
+document.querySelectorAll("[data-fb-name]").forEach(s => { s.textContent = FACEBOOK_NAME; });
+
+/* Send buttons: WhatsApp opens with the message typed in; Messenger copies it first */
+function sendButtons(text) {
+  const wa = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  return `<a class="primary send wa" href="${wa}" target="_blank" rel="noopener">Send on WhatsApp</a>` +
+    (MESSENGER_URL ? `<a class="primary send ms" href="${MESSENGER_URL}?text=${encodeURIComponent(text)}" target="_blank" rel="noopener" data-messenger>Send on Messenger</a>
+      <p class="note">On Messenger, if the message isn't filled in, just paste it. We copy it for you when you tap the button.</p>` : "");
+}
+/* Copy the message as the Messenger link opens, in case Messenger doesn't prefill it */
+function wireSend(text) {
+  const m = document.querySelector("[data-messenger]");
+  if (m) m.addEventListener("click", () => { navigator.clipboard?.writeText(text).catch(() => {}); });
+}
+
+function renderCustom() {
+  const body = $("#drawerBody");
+  const col = picked.custom || "Black";
+  body.innerHTML = `<p>Tell us what you want printed: a replacement part, a figure, a name sign, a gift. We'll message you a price before anything is printed.</p>
+    <form class="order" id="customForm">
+      <label for="cWhat">What do you want printed?<textarea id="cWhat" rows="4" required placeholder="e.g. a wall hook for my bike"></textarea></label>
+      <div class="pair">
+        <label for="cSize">Rough size<input id="cSize" placeholder="e.g. 15 cm tall"></label>
+        <label for="cColor">PLA color<select id="cColor">${Object.keys(COLORS).map(c => `<option${c === col ? " selected" : ""}>${c}</option>`).join("")}<option>Not sure yet</option></select></label>
+      </div>
+      <div class="pair">
+        <label for="cDate">Needed by<input id="cDate" placeholder="e.g. 20 November"></label>
+        <label for="cName">Your name<input id="cName" required autocomplete="name"></label>
+      </div>
+      <label for="cRef">Link to a model or example (optional)<input id="cRef" placeholder="e.g. a Printables or Thingiverse link"></label>
+      <p class="note">Have a model file (.stl or .3mf) or a photo? Send it to us on WhatsApp together with your request.</p>
+      <button class="primary" type="submit">Prepare my request</button>
+    </form>`;
+}
+
+document.addEventListener("submit", e => {
+  if (e.target.id !== "customForm") return;
+  e.preventDefault();
+  const v = id => $(id).value.trim();
+  const text = `AnyThing 3D custom request (pickup in Almere)\n\nWhat I want: ${v("#cWhat")}\nSize: ${v("#cSize") || "Not sure"}\nColor: ${v("#cColor")} PLA\nNeeded by: ${v("#cDate") || "No rush"}\nReference link: ${v("#cRef") || "None"}\nName: ${v("#cName")}`;
+  $("#drawerBody").innerHTML = `<p>Your request is ready. Send it to us and we'll reply with a price and the pickup point in Almere.</p>
+    <pre class="summary mono" id="customSummary"></pre>
+    ${sendButtons(text)}
+    <button type="button" class="chip" id="customBack">Edit my request</button>`;
+  $("#customSummary").textContent = text;
+  wireSend(text);
+  $("#customBack").onclick = renderCustom;
+});
+
+function renderFilters() {
+  const cats = ["All", ...new Set(PRODUCTS.map(p => p.cat))];
+  $("#filters").innerHTML = cats.map(c => `<button type="button" class="chip" aria-pressed="${c === filter}" data-cat="${c}">${c}</button>`).join("");
+}
+
+
+/* Print-in animation for text: each element animates once, the first time it's on screen */
+const PRINT_SEL = ".brand, .loc-pill, nav.links a, .cart-btn, .pickup-bar span, .hero-loc, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
+const printedCards = new Set();
+const printIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.filter(e => e.isIntersecting).forEach((e, i) => {
+    e.target.style.animationDelay = (i % 10) * 45 + "ms";
+    e.target.classList.add("print-in");
+    /* Drop the clip once printed so shadows and hover lifts aren't cut off */
+    e.target.addEventListener("animationend", () => { e.target.classList.remove("print-in"); e.target.style.animationDelay = ""; }, { once: true });
+    printIO.unobserve(e.target);
+  });
+}, { threshold: 0.2 }) : null;
+function printify(root) {
+  if (!printIO) return;
+  root.querySelectorAll(PRINT_SEL).forEach(el => { if (!el.closest(".drawer")) printIO.observe(el); });
+}
+
+function renderGrid() {
+  const list = PRODUCTS.filter(p => filter === "All" || p.cat === filter);
+  $("#grid").innerHTML = list.map(p => {
+    const col = picked[p.id] || p.colors[0];
+    const n = qtyOf(p.id);
+    const byColor = cart.filter(i => i.id === p.id).map(i => `${i.qty} ${i.color}`).join(", ");
+    return `<article class="card${n ? " in" : ""}" data-pid="${p.id}">
+      <div class="photo" style="--c:${COLORS[col]}">
+        <span class="tag">${p.cat}</span>${n ? `<span class="in-cart">${n} in cart</span>` : ""}
+        ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : `<div class="ph${p.custom ? " custom-ph" : ""}" aria-hidden="true"></div>`}
+      </div>
+      <div class="card-body">
+        <div class="card-title"><h3>${p.name}</h3>${p.custom ? '<span class="price ask">Price on request</span>' : `<span class="price">${money(p.price)}</span>`}</div>
+        ${p.by ? `<a class="credit" href="https://makerworld.com/en/models/${p.mw}" target="_blank" rel="noopener">Design &amp; photo: ${p.by} on MakerWorld</a>` : ""}
+        <div class="spec mono">${p.custom ? `PLA · ${p.size} · you describe it, we price it` : `PLA · ${p.grams} g · ${fmtTime(p.hours)} print${p.size ? ` · ${p.size}` : ""}`}</div>
+        ${p.note ? `<div class="note-line">${p.note}</div>` : ""}
+        <div class="swatches">
+          ${p.colors.map(c => `<button type="button" class="sw" style="--c:${COLORS[c]}" aria-label="${c}" title="${c}" aria-pressed="${c === col}" data-id="${p.id}" data-color="${c}"></button>`).join("")}
+          <span class="sw-name">${col}</span>
+        </div>
+        ${p.custom ? '<button type="button" class="add custom-btn" data-custom="1">Describe your idea</button>'
+          : n ? `<div class="stepper">
+              <button type="button" data-remove="${p.id}" aria-label="Remove one ${p.name}">−</button>
+              <div class="mid"><b>${n} in cart</b><small>${byColor}</small></div>
+              <button type="button" data-add="${p.id}" aria-label="Add one more ${p.name} in ${col}">+</button>
+            </div>`
+          : `<button type="button" class="add" data-add="${p.id}">Add to cart</button>`}
+      </div>
+    </article>`;
+  }).join("");
+  document.querySelectorAll("#grid .card").forEach(c => { if (!printedCards.has(c.dataset.pid)) { printedCards.add(c.dataset.pid); printify(c); } });
+}
+
+/* Drop cart lines for products or colors that no longer exist */
+cart = cart.filter(i => { const p = PRODUCTS.find(p => p.id === i.id && !p.custom); return p && p.colors.includes(i.color) && i.qty > 0; });
+
+const qtyOf = id => cart.filter(i => i.id === id).reduce((n, i) => n + i.qty, 0);
+const cartTotal = () => cart.reduce((s, i) => s + PRODUCTS.find(p => p.id === i.id).price * i.qty, 0);
+
+function updateCount() {
+  const n = cart.reduce((s, i) => s + i.qty, 0);
+  $("#cartCount").textContent = n;
+  $("#cartTotal").textContent = money(cartTotal());
+  $("#cartTotal").hidden = !n;
+  $("#openCart").classList.toggle("has-items", n > 0);
+}
+
+let toastTimer;
+function toast(msg) {
+  let el = $("#toast");
+  if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  el.innerHTML = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+
+function addToCart(id) {
+  const p = PRODUCTS.find(p => p.id === id);
+  const color = picked[id] || p.colors[0];
+  const found = cart.find(i => i.id === id && i.color === color);
+  found ? found.qty++ : cart.push({ id, color, qty: 1 });
+  save(); updateCount(); renderGrid();
+  const btn = $("#openCart"); btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump");
+  toast(`Added ${p.name} (${color}) · Cart total ${money(cartTotal())}<small>Pickup only in Almere</small>`);
+}
+
+/* Remove one: the selected color if it's in the cart, otherwise the last one added */
+function removeOne(id) {
+  const color = picked[id];
+  let k = cart.findIndex(i => i.id === id && i.color === color);
+  if (k < 0) k = cart.map(i => i.id).lastIndexOf(id);
+  if (k < 0) return;
+  if (--cart[k].qty <= 0) cart.splice(k, 1);
+  save(); updateCount(); renderGrid();
+}
+
+let view = "cart";
+function renderDrawer() {
+  const body = $("#drawerBody");
+  const items = cart.map(i => ({ ...i, p: PRODUCTS.find(p => p.id === i.id) })).filter(i => i.p);
+  const total = items.reduce((s, i) => s + i.p.price * i.qty, 0);
+  if (!items.length) { body.innerHTML = '<p class="empty">Your cart is empty. Add a print from the gallery to start an order.</p>'; return; }
+  if (view === "cart") {
+    body.innerHTML = items.map((i, k) => `<div class="line-item" style="--c:${COLORS[i.color]}">
+        <span class="dot"></span>
+        <div>${i.p.name}<small>${i.color} · ${money(i.p.price)} each</small></div>
+        <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="Decrease">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="Increase">+</button><button type="button" class="del" data-del="${k}" aria-label="Remove ${i.p.name} from cart">Remove</button></div>
+      </div>`).join("") +
+      `<div class="total"><span>Total</span><span class="price">${money(total)}</span></div>
+       <div class="pickup-box"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+         <span><strong>Pickup only in Almere.</strong> We don't ship. We send you the pickup point when we confirm your order.</span></div>
+       <form class="order" id="orderForm">
+         <label for="oName">Your name<input id="oName" required autocomplete="name"></label>
+         <label for="oContact">Phone number<input id="oContact" required autocomplete="tel" placeholder="e.g. 06 12345678"></label>
+         <label for="oNotes">Notes (custom text, size, deadline)<textarea id="oNotes" rows="3"></textarea></label>
+         <button class="primary" type="submit">Prepare order request</button>
+       </form>`;
+  } else {
+    const text = `AnyThing 3D order request (pickup in Almere)\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${i.color}) — ${money(i.p.price * i.qty)}`).join("\n") +
+      `\n\nTotal: ${money(total)}\nName: ${view.name}\nContact: ${view.contact}\nNotes: ${view.notes || "—"}`;
+    body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price and the pickup point in Almere.</p>
+      <pre class="summary mono" id="summary"></pre>
+      ${sendButtons(text)}
+      <p class="note">You can also find our listings on <a href="${FACEBOOK_URL}" target="_blank" rel="noopener">Facebook Marketplace</a>.</p>
+      <button type="button" class="chip" id="backBtn">Back to cart</button>`;
+    $("#summary").textContent = text;
+    wireSend(text);
+    $("#backBtn").onclick = () => { view = "cart"; renderDrawer(); };
+  }
+}
+
+function openCart(o, mode) {
+  $("#drawer").hidden = !o; $("#scrim").hidden = !o;
+  if (!o) return;
+  if (mode === "custom") { $("#drawerTitle").textContent = "Custom print"; renderCustom(); }
+  else { $("#drawerTitle").textContent = "Your cart"; view = "cart"; renderDrawer(); }
+}
+
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-open-custom]")) { e.preventDefault(); openCart(true, "custom"); return; }
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.custom) openCart(true, "custom");
+  else if (t.dataset.cat) { filter = t.dataset.cat; renderFilters(); renderGrid(); }
+  else if (t.dataset.color) { picked[t.dataset.id] = t.dataset.color; renderGrid(); }
+  else if (t.dataset.add) addToCart(t.dataset.add);
+  else if (t.dataset.remove) removeOne(t.dataset.remove);
+  else if (t.dataset.q) {
+    const i = cart[+t.dataset.q]; i.qty += +t.dataset.d;
+    if (i.qty <= 0) cart.splice(+t.dataset.q, 1);
+    save(); updateCount(); renderDrawer(); renderGrid();
+  }
+  else if (t.dataset.del) {
+    cart.splice(+t.dataset.del, 1);
+    save(); updateCount(); renderDrawer(); renderGrid();
+  }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "orderForm") return;
+  e.preventDefault();
+  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value };
+  renderDrawer();
+});
+$("#openCart").onclick = () => openCart(true);
+$("#closeCart").onclick = () => openCart(false);
+$("#scrim").onclick = () => openCart(false);
+document.addEventListener("keydown", e => { if (e.key === "Escape") openCart(false); });
+
+renderFilters(); renderGrid(); updateCount();
+printify(document.querySelector("header")); printify(document.querySelector(".hero")); printify(document.querySelector("#how")); printify(document.querySelector("footer")); document.querySelectorAll(".section-head, .gallery-note").forEach(el => printIO && (el.matches(PRINT_SEL) ? printIO.observe(el) : printify(el)));
+</script>
+
+</html>
