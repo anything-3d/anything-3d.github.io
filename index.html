@@ -126,10 +126,7 @@ nav.links a:hover { color: var(--ink); }
 .hero-loc small { font-family: var(--f-mono); font-weight: 500; font-size: max(.8125rem, .3em); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
 @media (max-width: 420px) { .brand { font-size: .9375rem; } .loc-pill { font-size: .8125rem; padding: 4px 10px 4px 8px; } }
 
-/* Pickup bar, cart total, in-cart state */
-.pickup-bar { background: var(--ink); color: var(--plate); font-size: .875rem; }
-.pickup-bar .wrap { display: flex; align-items: center; gap: 8px; padding-block: 8px; justify-content: center; text-align: center; }
-.pickup-bar svg { flex: none; color: var(--pei); }
+/* Cart total, in-cart state */
 .cart-btn.has-items { background-color: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .cart-btn.has-items .count { background: var(--accent-ink); color: var(--accent); }
 .cart-total { font-family: var(--f-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -145,8 +142,6 @@ nav.links a:hover { color: var(--ink); }
 .stepper .mid small { color: var(--ink-soft); font-size: .75rem; }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--plate); padding: 12px 18px; border-radius: 12px; font-size: .9375rem; max-width: calc(100% - 32px); text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
 .toast small { display: block; color: var(--pei); font-weight: 600; margin-top: 2px; }
-.pickup-box { display: flex; gap: 10px; align-items: flex-start; background: var(--ink); color: var(--plate); border-radius: 10px; padding: 12px 14px; font-size: .9375rem; }
-.pickup-box svg { flex: none; color: var(--pei); margin-top: 2px; }
 .add { margin-top: auto; border: 1px solid var(--ink); background: transparent; border-radius: 10px; padding: 10px; font-weight: 600; }
 
 /* Custom order */
@@ -240,12 +235,6 @@ a.primary.ms:hover { background-color: #0550C8; }
 </style>
 
 <header class="top">
-  <div class="pickup-bar">
-    <div class="wrap">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
-      <span><strong>Pickup only in Almere.</strong> We don't ship. Only order if you can pick up in Almere.</span>
-    </div>
-  </div>
   <div class="wrap">
     <div class="brand-wrap">
       <a class="brand" href="#">AnyThing <span>3D</span></a>
@@ -263,9 +252,9 @@ a.primary.ms:hover { background-color: #0550C8; }
 <main>
   <section class="hero wrap">
     <h1 class="wordmark" aria-label="AnyThing 3D, Almere, Netherlands">AnyThing<br><span class="three">3D</span></h1>
-    <p class="hero-loc"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg><span>Almere, Netherlands</span><small>Pickup only · no shipping</small></p>
+    <p class="hero-loc"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg><span>Almere, Netherlands</span></p>
     <div class="hero-row">
-      <p class="tagline">Prints made to order, layer by layer. Pick a piece and a filament color, or ask for something custom. Pick it up in Almere.</p>
+      <p class="tagline">Prints made to order, layer by layer. Pick a piece and a filament color, or ask for something custom.</p>
       <a class="hero-cta" href="#gallery">Browse the gallery ↓</a>
     </div>
     <div class="readout">
@@ -273,7 +262,6 @@ a.primary.ms:hover { background-color: #0550C8; }
       <div><span class="label">Layer height</span><b>0.12 – 0.28 mm</b></div>
       <div><span class="label">Max build</span><b>256 × 256 × 256 mm</b></div>
       <div><span class="label">Turnaround</span><b>3 – 5 days</b></div>
-      <div><span class="label">Pickup</span><b>Almere only · no shipping</b></div>
     </div>
   </section>
 
@@ -291,8 +279,8 @@ a.primary.ms:hover { background-color: #0550C8; }
     <div class="steps">
       <div class="step"><span class="n">01</span><h3>Choose</h3><p>Add prints to your cart, or describe a custom print.</p></div>
       <div class="step"><span class="n">02</span><h3>Message us</h3><p>Send your request to us on WhatsApp or Messenger. It's already written for you.</p></div>
-      <div class="step"><span class="n">03</span><h3>Confirm</h3><p>We reply with the final price and the pickup point in Almere.</p></div>
-      <div class="step"><span class="n">04</span><h3>Print &amp; pick up</h3><p>Your pieces go on the printer. Pick them up in Almere, usually within 3 to 5 days.</p></div>
+      <div class="step"><span class="n">03</span><h3>Confirm</h3><p>We reply with the final price and confirm your order.</p></div>
+      <div class="step"><span class="n">04</span><h3>Print</h3><p>Your pieces go on the printer, usually ready within 3 to 5 days. We message you when they're done.</p></div>
     </div>
   </section>
 </main>
@@ -300,7 +288,7 @@ a.primary.ms:hover { background-color: #0550C8; }
 <footer>
   <div class="wrap">
     <span>© AnyThing 3D</span>
-    <span>Pickup in Almere only · Find us on <a data-fb href="#" target="_blank" rel="noopener">Facebook Marketplace</a></span>
+    <span>Find us on <a data-fb href="#" target="_blank" rel="noopener">Facebook Marketplace</a></span>
   </div>
 </footer>
 
@@ -451,8 +439,8 @@ document.addEventListener("submit", e => {
   if (e.target.id !== "customForm") return;
   e.preventDefault();
   const v = id => $(id).value.trim();
-  const text = `AnyThing 3D custom request (pickup in Almere)\n\nWhat I want: ${v("#cWhat")}\nSize: ${v("#cSize") || "Not sure"}\nColor: ${v("#cColor")} PLA\nNeeded by: ${v("#cDate") || "No rush"}\nReference link: ${v("#cRef") || "None"}\nName: ${v("#cName")}`;
-  $("#drawerBody").innerHTML = `<p>Your request is ready. Send it to us and we'll reply with a price and the pickup point in Almere.</p>
+  const text = `AnyThing 3D custom request\n\nWhat I want: ${v("#cWhat")}\nSize: ${v("#cSize") || "Not sure"}\nColor: ${v("#cColor")} PLA\nNeeded by: ${v("#cDate") || "No rush"}\nReference link: ${v("#cRef") || "None"}\nName: ${v("#cName")}`;
+  $("#drawerBody").innerHTML = `<p>Your request is ready. Send it to us and we'll reply with a price.</p>
     <pre class="summary mono" id="customSummary"></pre>
     ${sendButtons(text)}
     <button type="button" class="chip" id="customBack">Edit my request</button>`;
@@ -468,7 +456,7 @@ function renderFilters() {
 
 
 /* Print-in animation for text: each element animates once, the first time it's on screen */
-const PRINT_SEL = ".brand, .loc-pill, nav.links a, .cart-btn, .pickup-bar span, .hero-loc, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
+const PRINT_SEL = ".brand, .loc-pill, nav.links a, .cart-btn, .hero-loc, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
 const printedCards = new Set();
 const printIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
   entries.filter(e => e.isIntersecting).forEach((e, i) => {
@@ -546,7 +534,7 @@ function addToCart(id) {
   found ? found.qty++ : cart.push({ id, color, qty: 1 });
   save(); updateCount(); renderGrid();
   const btn = $("#openCart"); btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump");
-  toast(`Added ${p.name} (${color}) · Cart total ${money(cartTotal())}<small>Pickup only in Almere</small>`);
+  toast(`Added ${p.name} (${color}) · Cart total ${money(cartTotal())}`);
 }
 
 /* Remove one: the selected color if it's in the cart, otherwise the last one added */
@@ -572,8 +560,7 @@ function renderDrawer() {
         <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="Decrease">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="Increase">+</button><button type="button" class="del" data-del="${k}" aria-label="Remove ${i.p.name} from cart">Remove</button></div>
       </div>`).join("") +
       `<div class="total"><span>Total</span><span class="price">${money(total)}</span></div>
-       <div class="pickup-box"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
-         <span><strong>Pickup only in Almere.</strong> We don't ship. We send you the pickup point when we confirm your order.</span></div>
+
        <form class="order" id="orderForm">
          <label for="oName">Your name<input id="oName" required autocomplete="name"></label>
          <label for="oContact">Phone number<input id="oContact" required autocomplete="tel" placeholder="e.g. 06 12345678"></label>
@@ -581,9 +568,9 @@ function renderDrawer() {
          <button class="primary" type="submit">Prepare order request</button>
        </form>`;
   } else {
-    const text = `AnyThing 3D order request (pickup in Almere)\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${i.color}) — ${money(i.p.price * i.qty)}`).join("\n") +
+    const text = `AnyThing 3D order request\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${i.color}) — ${money(i.p.price * i.qty)}`).join("\n") +
       `\n\nTotal: ${money(total)}\nName: ${view.name}\nContact: ${view.contact}\nNotes: ${view.notes || "—"}`;
-    body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price and the pickup point in Almere.</p>
+    body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price.</p>
       <pre class="summary mono" id="summary"></pre>
       ${sendButtons(text)}
       <p class="note">You can also find our listings on <a href="${FACEBOOK_URL}" target="_blank" rel="noopener">Facebook Marketplace</a>.</p>
