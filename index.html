@@ -117,6 +117,12 @@ nav.links a:hover { color: var(--ink); }
 .swatches { display: flex; gap: 8px; align-items: center; }
 .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--ink-soft); padding: 0; background: var(--c); }
 .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.sw-multi { background: conic-gradient(#D23A3A, #F2C21B, #2E8B4F, #1FB5C9, #2F4BE0, #A98FE0, #D23A3A); }
+.sw-name .plus { font-weight: 600; color: var(--accent); }
+.multi-row { display: grid; grid-template-columns: 24px 1fr 1.3fr; gap: 10px; align-items: end; }
+.multi-n { font-family: var(--f-mono); color: var(--ink-soft); padding-bottom: 12px; text-align: center; }
+form.order select { width: 100%; }
+.line-item .dot { background: var(--c); }
 .sw-name { font-size: .8125rem; color: var(--ink-soft); }
 /* Location next to the logo and under the wordmark */
 .brand-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
@@ -270,7 +276,7 @@ a.primary.ms:hover { background-color: #0550C8; }
       <h2>Gallery</h2>
       <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
     </div>
-    <p class="gallery-note">Prices are for the 3D printed parts only. Extra things like key rings, screws, magnets or string are <strong>not included</strong>, unless they are printed.</p>
+    <p class="gallery-note">Prices are for the 3D printed parts only. Extra things like key rings, screws, magnets or string are <strong>not included</strong>, unless they are printed. Every print can also be <strong>multicolor</strong>: up to 4 colors for <span id="multiExtra"></span> extra.</p>
     <div class="grid" id="grid"></div>
   </section>
 
@@ -305,6 +311,8 @@ const IMAGES = {"airtag": "images/airtag.png", "axolotl": "images/axolotl.png", 
 <script>
 /* ===== SHOP SETTINGS — edit these ===== */
 const CURRENCY = "€";
+const MULTICOLOR_EXTRA = 1.99;                                  // extra price for a multicolor print (2–4 colors)
+const MULTI = "Multicolor";
 const FACEBOOK_NAME = "AnyThing 3D";                         // name customers look for on Facebook
 const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61594906215769"; // your AnyThing 3D Facebook Page
 const WHATSAPP_NUMBER = "31617614793";                       // country code + number, digits only
@@ -411,6 +419,7 @@ const picked = {};
 let filter = "All";
 
 document.querySelectorAll("[data-fb]").forEach(a => { a.href = FACEBOOK_URL; });
+$("#multiExtra").textContent = money(MULTICOLOR_EXTRA);
 document.querySelectorAll("[data-fb-name]").forEach(s => { s.textContent = FACEBOOK_NAME; });
 
 /* Send buttons: WhatsApp opens with the message typed in; Messenger copies it first */
@@ -434,7 +443,7 @@ function renderCustom() {
       <label for="cWhat">What do you want printed?<textarea id="cWhat" rows="4" required placeholder="e.g. a wall hook for my bike"></textarea></label>
       <div class="pair">
         <label for="cSize">Rough size<input id="cSize" placeholder="e.g. 15 cm tall"></label>
-        <label for="cColor">PLA color<select id="cColor">${Object.keys(COLORS).map(c => `<option${c === col ? " selected" : ""}>${c}</option>`).join("")}<option>Not sure yet</option></select></label>
+        <label for="cColor">PLA color<select id="cColor">${Object.keys(COLORS).map(c => `<option${c === col ? " selected" : ""}>${c}</option>`).join("")}<option>Multicolor (describe above)</option><option>Not sure yet</option></select></label>
       </div>
       <div class="pair">
         <label for="cDate">Needed by<input id="cDate" placeholder="e.g. 20 November"></label>
@@ -489,6 +498,7 @@ function renderGrid() {
     const col = picked[p.id] || p.colors[0];
     const n = qtyOf(p.id);
     const byColor = cart.filter(i => i.id === p.id).map(i => `${i.qty} ${i.color}`).join(", ");
+    const addAttr = col === MULTI ? `data-multi="${p.id}"` : `data-add="${p.id}"`;
     return `<article class="card${n ? " in" : ""}" data-pid="${p.id}">
       <div class="photo" style="--c:${COLORS[col]}">
         <span class="tag">${p.cat}</span>${n ? `<span class="in-cart">${n} in cart</span>` : ""}
@@ -501,15 +511,16 @@ function renderGrid() {
         ${p.note ? `<div class="note-line">${p.note}</div>` : ""}
         <div class="swatches">
           ${p.colors.map(c => `<button type="button" class="sw" style="--c:${COLORS[c]}" aria-label="${c}" title="${c}" aria-pressed="${c === col}" data-id="${p.id}" data-color="${c}"></button>`).join("")}
-          <span class="sw-name">${col}</span>
+          ${p.custom ? "" : `<button type="button" class="sw sw-multi" aria-label="Multicolor, up to 4 colors, plus ${money(MULTICOLOR_EXTRA)}" title="Multicolor (+${money(MULTICOLOR_EXTRA)})" aria-pressed="${col === MULTI}" data-id="${p.id}" data-color="${MULTI}"></button>`}
+          <span class="sw-name">${col === MULTI ? `Multicolor <b class="plus">+${money(MULTICOLOR_EXTRA)}</b>` : col}</span>
         </div>
         ${p.custom ? '<button type="button" class="add custom-btn" data-custom="1">Describe your idea</button>'
           : n ? `<div class="stepper">
               <button type="button" data-remove="${p.id}" aria-label="Remove one ${p.name}">−</button>
               <div class="mid"><b>${n} in cart</b><small>${byColor}</small></div>
-              <button type="button" data-add="${p.id}" aria-label="Add one more ${p.name} in ${col}">+</button>
+              <button type="button" ${addAttr} aria-label="Add one more ${p.name} in ${col}">+</button>
             </div>`
-          : `<button type="button" class="add" data-add="${p.id}">Add to cart</button>`}
+          : `<button type="button" class="add" ${addAttr}>${col === MULTI ? "Choose colors" : "Add to cart"}</button>`}
       </div>
     </article>`;
   }).join("");
@@ -517,10 +528,16 @@ function renderGrid() {
 }
 
 /* Drop cart lines for products or colors that no longer exist */
-cart = cart.filter(i => { const p = PRODUCTS.find(p => p.id === i.id && !p.custom); return p && p.colors.includes(i.color) && i.qty > 0; });
+cart = cart.filter(i => { const p = PRODUCTS.find(p => p.id === i.id && !p.custom); if (!p || !(i.qty > 0)) return false;
+  return i.color === MULTI ? Array.isArray(i.parts) && i.parts.length >= 2 && i.parts.every(x => COLORS[x.color]) : p.colors.includes(i.color); });
+
+/* Multicolor lines cost the normal price + MULTICOLOR_EXTRA and carry a color plan: [{ color, where }] */
+const linePrice = i => PRODUCTS.find(p => p.id === i.id).price + (i.color === MULTI ? MULTICOLOR_EXTRA : 0);
+const colorLabel = i => i.color === MULTI ? `Multicolor: ${i.parts.map(x => x.where ? `${x.color} (${x.where})` : x.color).join(", ")}` : i.color;
+const multiDot = parts => `conic-gradient(${parts.map((x, k) => `${COLORS[x.color]} ${k * 100 / parts.length}% ${(k + 1) * 100 / parts.length}%`).join(", ")})`;
 
 const qtyOf = id => cart.filter(i => i.id === id).reduce((n, i) => n + i.qty, 0);
-const cartTotal = () => cart.reduce((s, i) => s + PRODUCTS.find(p => p.id === i.id).price * i.qty, 0);
+const cartTotal = () => cart.reduce((s, i) => s + linePrice(i) * i.qty, 0);
 
 function updateCount() {
   const n = cart.reduce((s, i) => s + i.qty, 0);
@@ -538,20 +555,38 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
 }
 
-function addToCart(id) {
+function addToCart(id, parts) {
   const p = PRODUCTS.find(p => p.id === id);
-  const color = picked[id] || p.colors[0];
-  const found = cart.find(i => i.id === id && i.color === color);
-  found ? found.qty++ : cart.push({ id, color, qty: 1 });
+  const color = parts ? MULTI : (picked[id] && picked[id] !== MULTI ? picked[id] : p.colors[0]);
+  const found = parts ? null : cart.find(i => i.id === id && i.color === color);
+  found ? found.qty++ : cart.push(parts ? { id, color, parts, qty: 1 } : { id, color, qty: 1 });
   save(); updateCount(); renderGrid();
   const btn = $("#openCart"); btn.classList.remove("bump"); void btn.offsetWidth; btn.classList.add("bump");
-  toast(`Added ${p.name} (${color}) · Cart total ${money(cartTotal())}`);
+  toast(`Added ${p.name} (${parts ? "Multicolor" : color}) · Cart total ${money(cartTotal())}`);
+}
+
+/* Multicolor form: 2 to 4 colors, each with where it goes */
+function renderMulti(id) {
+  const p = PRODUCTS.find(p => p.id === id);
+  const opts = (sel, optional) => (optional ? `<option value="">No color</option>` : "") + Object.keys(COLORS).map(c => `<option${c === sel ? " selected" : ""}>${c}</option>`).join("");
+  const defaults = [p.colors[0], p.colors[1] || "White", "", ""];
+  $("#drawerBody").innerHTML = `<p><strong>${p.name}</strong> in up to 4 colors. Pick each color and write which part it goes on.</p>
+    <form class="order" id="multiForm" data-id="${id}">
+      ${defaults.map((c, k) => `<div class="multi-row">
+        <span class="multi-n">${k + 1}</span>
+        <label for="mColor${k}">Color ${k + 1}${k > 1 ? " (optional)" : ""}<select id="mColor${k}"${k < 2 ? " required" : ""}>${opts(c, k > 1)}</select></label>
+        <label for="mWhere${k}">Goes on<input id="mWhere${k}" placeholder="${["e.g. body", "e.g. eyes", "e.g. text", "e.g. base"][k]}"${k < 2 ? " required" : ""}></label>
+      </div>`).join("")}
+      <div class="total"><span>Price</span><span class="price">${money(p.price)} + ${money(MULTICOLOR_EXTRA)} = ${money(p.price + MULTICOLOR_EXTRA)}</span></div>
+      <p class="note" id="multiErr" hidden>Pick at least 2 different colors.</p>
+      <button class="primary" type="submit">Add multicolor to cart</button>
+    </form>`;
 }
 
 /* Remove one: the selected color if it's in the cart, otherwise the last one added */
 function removeOne(id) {
   const color = picked[id];
-  let k = cart.findIndex(i => i.id === id && i.color === color);
+  let k = color === MULTI ? cart.map(i => i.id === id && i.color === MULTI).lastIndexOf(true) : cart.findIndex(i => i.id === id && i.color === color);
   if (k < 0) k = cart.map(i => i.id).lastIndexOf(id);
   if (k < 0) return;
   if (--cart[k].qty <= 0) cart.splice(k, 1);
@@ -562,12 +597,12 @@ let view = "cart";
 function renderDrawer() {
   const body = $("#drawerBody");
   const items = cart.map(i => ({ ...i, p: PRODUCTS.find(p => p.id === i.id) })).filter(i => i.p);
-  const total = items.reduce((s, i) => s + i.p.price * i.qty, 0);
+  const total = items.reduce((s, i) => s + linePrice(i) * i.qty, 0);
   if (!items.length) { body.innerHTML = '<p class="empty">Your cart is empty. Add a print from the gallery to start an order.</p>'; return; }
   if (view === "cart") {
-    body.innerHTML = items.map((i, k) => `<div class="line-item" style="--c:${COLORS[i.color]}">
+    body.innerHTML = items.map((i, k) => `<div class="line-item" style="--c:${i.color === MULTI ? multiDot(i.parts) : COLORS[i.color]}">
         <span class="dot"></span>
-        <div>${i.p.name}<small>${i.color} · ${money(i.p.price)} each</small></div>
+        <div>${i.p.name}<small>${colorLabel(i)} · ${money(linePrice(i))} each</small></div>
         <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="Decrease">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="Increase">+</button><button type="button" class="del" data-del="${k}" aria-label="Remove ${i.p.name} from cart">Remove</button></div>
       </div>`).join("") +
       `<div class="total"><span>Total</span><span class="price">${money(total)}</span></div>
@@ -579,7 +614,7 @@ function renderDrawer() {
          <button class="primary" type="submit">Prepare order request</button>
        </form>`;
   } else {
-    const text = `AnyThing 3D order request\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${i.color}) — ${money(i.p.price * i.qty)}`).join("\n") +
+    const text = `AnyThing 3D order request\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${colorLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
       `\n\nTotal: ${money(total)}\nName: ${view.name}\nContact: ${view.contact}\nNotes: ${view.notes || "—"}`;
     body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price.</p>
       <pre class="summary mono" id="summary"></pre>
@@ -596,6 +631,7 @@ function openCart(o, mode) {
   $("#drawer").hidden = !o; $("#scrim").hidden = !o;
   if (!o) return;
   if (mode === "custom") { $("#drawerTitle").textContent = "Custom print"; renderCustom(); }
+  else if (mode === "multi") { $("#drawerTitle").textContent = "Multicolor"; renderMulti(arguments[2]); }
   else { $("#drawerTitle").textContent = "Your cart"; view = "cart"; renderDrawer(); }
 }
 
@@ -606,6 +642,7 @@ document.addEventListener("click", e => {
   else if (t.dataset.cat) { filter = t.dataset.cat; renderFilters(); renderGrid(); }
   else if (t.dataset.color) { picked[t.dataset.id] = t.dataset.color; renderGrid(); }
   else if (t.dataset.add) addToCart(t.dataset.add);
+  else if (t.dataset.multi) openCart(true, "multi", t.dataset.multi);
   else if (t.dataset.remove) removeOne(t.dataset.remove);
   else if (t.dataset.q) {
     const i = cart[+t.dataset.q]; i.qty += +t.dataset.d;
@@ -616,6 +653,14 @@ document.addEventListener("click", e => {
     cart.splice(+t.dataset.del, 1);
     save(); updateCount(); renderDrawer(); renderGrid();
   }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "multiForm") return;
+  e.preventDefault();
+  const parts = [0, 1, 2, 3].map(k => ({ color: $(`#mColor${k}`).value, where: $(`#mWhere${k}`).value.trim() })).filter(x => x.color);
+  if (new Set(parts.map(x => x.color)).size < 2) { $("#multiErr").hidden = false; return; }
+  addToCart(e.target.dataset.id, parts);
+  openCart(false);
 });
 document.addEventListener("submit", e => {
   if (e.target.id !== "orderForm") return;
