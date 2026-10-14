@@ -199,6 +199,13 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 .total { display: flex; justify-content: space-between; font-weight: 600; padding-top: 4px; }
 .total .price { font-size: 1.125rem; }
 form.order { display: flex; flex-direction: column; gap: 12px; }
+.deliver { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.deliver legend { padding: 0; margin-bottom: 4px; font-size: .875rem; font-weight: 500; }
+.deliver .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.deliver .opts label { flex-direction: row; align-items: center; justify-content: center; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); cursor: pointer; font-weight: 600; text-align: center; }
+.deliver .opts label:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); }
+.deliver .opts input { accent-color: var(--accent); margin: 0; }
+.deliver .opts label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 form.order label { display: flex; flex-direction: column; gap: 4px; font-size: .875rem; font-weight: 500; }
 form.order input, form.order textarea { font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); color: var(--ink); }
 .primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 12px; font-weight: 600; }
@@ -431,6 +438,24 @@ function wireSend(text) {
   if (m) m.addEventListener("click", () => { navigator.clipboard?.writeText(text).catch(() => {}); });
 }
 
+/* Pickup or shipping. The address only goes into the customer's own message, it is never stored. */
+const deliveryFields = k => `<fieldset class="deliver">
+    <legend>Pickup or shipping?</legend>
+    <div class="opts">
+      <label for="${k}Pick"><input type="radio" name="${k}Deliver" id="${k}Pick" value="Pickup" checked>Pickup</label>
+      <label for="${k}Ship"><input type="radio" name="${k}Deliver" id="${k}Ship" value="Shipping">Shipping</label>
+    </div>
+    <p class="note" id="${k}PickNote">We'll send you the pickup address in the chat.</p>
+    <label for="${k}Addr" id="${k}AddrWrap" hidden>Your address (street, house number, postcode, city)<textarea id="${k}Addr" rows="3" autocomplete="street-address"></textarea><span class="note">Shipping cost is confirmed in the chat.</span></label>
+  </fieldset>`;
+const deliveryText = k => $(`#${k}Ship`).checked ? `Delivery: Shipping\nAddress: ${$(`#${k}Addr`).value.trim()}` : "Delivery: Pickup";
+document.addEventListener("change", e => {
+  const r = e.target; if (r.type !== "radio" || !r.name.endsWith("Deliver")) return;
+  const k = r.name.slice(0, -7), ship = r.value === "Shipping";
+  $(`#${k}AddrWrap`).hidden = !ship; $(`#${k}Addr`).required = ship; $(`#${k}PickNote`).hidden = ship;
+  if (ship) $(`#${k}Addr`).focus();
+});
+
 function renderCustom() {
   const body = $("#drawerBody");
   const col = picked.custom || "Black";
@@ -446,6 +471,7 @@ function renderCustom() {
         <label for="cName">Your name<input id="cName" required autocomplete="name"></label>
       </div>
       <label for="cRef">Link to a model or example (optional)<input id="cRef" placeholder="e.g. a Printables or Thingiverse link"></label>
+      ${deliveryFields("c")}
       <p class="note">Have a model file (.stl or .3mf) or a photo? Send it to us on WhatsApp together with your request.</p>
       <button class="primary" type="submit">Prepare my request</button>
     </form>`;
@@ -455,7 +481,7 @@ document.addEventListener("submit", e => {
   if (e.target.id !== "customForm") return;
   e.preventDefault();
   const v = id => $(id).value.trim();
-  const text = `AnyThing 3D custom request\n\nWhat I want: ${v("#cWhat")}\nSize: ${v("#cSize") || "Not sure"}\nColor: ${v("#cColor")} PLA\nNeeded by: ${v("#cDate") || "No rush"}\nReference link: ${v("#cRef") || "None"}\nName: ${v("#cName")}`;
+  const text = `AnyThing 3D custom request\n\nWhat I want: ${v("#cWhat")}\nSize: ${v("#cSize") || "Not sure"}\nColor: ${v("#cColor")} PLA\nNeeded by: ${v("#cDate") || "No rush"}\nReference link: ${v("#cRef") || "None"}\nName: ${v("#cName")}\n${deliveryText("c")}`;
   $("#drawerBody").innerHTML = `<p>Your request is ready. Send it to us and we'll reply with a price.</p>
     <pre class="summary mono" id="customSummary"></pre>
     ${sendButtons(text)}
@@ -606,12 +632,13 @@ function renderDrawer() {
        <form class="order" id="orderForm">
          <label for="oName">Your name<input id="oName" required autocomplete="name"></label>
          <label for="oContact">Phone number<input id="oContact" required autocomplete="tel" placeholder="e.g. 06 12345678"></label>
+         ${deliveryFields("o")}
          <label for="oNotes">Notes (custom text, size, deadline)<textarea id="oNotes" rows="3"></textarea></label>
          <button class="primary" type="submit">Prepare order request</button>
        </form>`;
   } else {
     const text = `AnyThing 3D order request\n\n` + items.map(i => `${i.qty} × ${i.p.name} (${colorLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
-      `\n\nTotal: ${money(total)}\nName: ${view.name}\nContact: ${view.contact}\nNotes: ${view.notes || "—"}`;
+      `\n\nTotal: ${money(total)}\nName: ${view.name}\nContact: ${view.contact}\n${view.delivery}\nNotes: ${view.notes || "—"}`;
     body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price.</p>
       <pre class="summary mono" id="summary"></pre>
       ${sendButtons(text)}
@@ -661,7 +688,7 @@ document.addEventListener("submit", e => {
 document.addEventListener("submit", e => {
   if (e.target.id !== "orderForm") return;
   e.preventDefault();
-  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value };
+  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o") };
   renderDrawer();
 });
 $("#openCart").onclick = () => openCart(true);
