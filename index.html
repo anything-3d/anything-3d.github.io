@@ -79,7 +79,7 @@ nav.links a:hover { color: var(--ink); }
 /* All text "prints" in layer by layer like the wordmark, once, as it scrolls into view */
 @media (prefers-reduced-motion: no-preference) {
   .print-in { animation: print .9s steps(14, end) both; }
-  h2.print-in, .hero-loc.print-in { animation-duration: 1.2s; animation-timing-function: steps(20, end); }
+  h2.print-in { animation-duration: 1.2s; animation-timing-function: steps(20, end); }
 }
 .hero-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; margin-top: 28px; }
 .tagline { font-size: var(--step-1); max-width: 34ch; margin: 0; }
@@ -126,11 +126,7 @@ form.order select { width: 100%; }
 .sw-name { font-size: .8125rem; color: var(--ink-soft); }
 /* Location next to the logo and under the wordmark */
 .brand-wrap { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
-.loc-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--pei); color: #1A1306; font-weight: 700; font-size: .875rem; padding: 5px 12px 5px 9px; border-radius: 999px; white-space: nowrap; letter-spacing: .01em; }
-.hero-loc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 18px 0 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 4.5vw, 3rem); letter-spacing: -.02em; line-height: 1.1; color: var(--pei); text-wrap: balance; }
-.hero-loc svg { width: .9em; height: .9em; flex: none; }
-.hero-loc small { font-family: var(--f-mono); font-weight: 500; font-size: max(.8125rem, .3em); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
-@media (max-width: 420px) { .brand { font-size: .9375rem; } .loc-pill { font-size: .8125rem; padding: 4px 10px 4px 8px; } }
+@media (max-width: 420px) { .brand { font-size: .9375rem; } }
 
 /* Cart total, in-cart state */
 .cart-btn.has-items { background-color: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
@@ -244,7 +240,6 @@ a.primary.ms:hover { background-color: #0550C8; }
   <div class="wrap">
     <div class="brand-wrap">
       <a class="brand" href="#">AnyThing <span>3D</span></a>
-      <span class="loc-pill"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>Almere, Netherlands</span>
     </div>
     <nav class="links">
       <a href="#gallery">Gallery</a>
@@ -257,8 +252,7 @@ a.primary.ms:hover { background-color: #0550C8; }
 
 <main>
   <section class="hero wrap">
-    <h1 class="wordmark" aria-label="AnyThing 3D, Almere, Netherlands">AnyThing<br><span class="three">3D</span></h1>
-    <p class="hero-loc"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg><span>Almere, Netherlands</span></p>
+    <h1 class="wordmark" aria-label="AnyThing 3D">AnyThing<br><span class="three">3D</span></h1>
     <div class="hero-row">
       <p class="tagline">Prints made to order, layer by layer. Pick a piece and a filament color, or ask for something custom.</p>
       <a class="hero-cta" href="#gallery">Browse the gallery ↓</a>
@@ -294,7 +288,7 @@ a.primary.ms:hover { background-color: #0550C8; }
 <footer>
   <div class="wrap">
     <span>© AnyThing 3D</span>
-    <span>Find us on <a data-fb href="#" target="_blank" rel="noopener">Facebook Marketplace</a></span>
+    <span>Find us on <a data-fb href="#" target="_blank" rel="noopener">Facebook</a></span>
   </div>
 </footer>
 
@@ -476,7 +470,7 @@ function renderFilters() {
 
 
 /* Print-in animation for text: each element animates once, the first time it's on screen */
-const PRINT_SEL = ".brand, .loc-pill, nav.links a, .cart-btn, .hero-loc, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
+const PRINT_SEL = ".brand, nav.links a, .cart-btn, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
 const printedCards = new Set();
 const printIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
   entries.filter(e => e.isIntersecting).forEach((e, i) => {
@@ -619,7 +613,7 @@ function renderDrawer() {
     body.innerHTML = `<p>Your order request is ready. Send it to us and we'll reply with the final price.</p>
       <pre class="summary mono" id="summary"></pre>
       ${sendButtons(text)}
-      <p class="note">You can also find our listings on <a href="${FACEBOOK_URL}" target="_blank" rel="noopener">Facebook Marketplace</a>.</p>
+      <p class="note">You can also find us on <a href="${FACEBOOK_URL}" target="_blank" rel="noopener">Facebook</a>.</p>
       <button type="button" class="chip" id="backBtn">Back to cart</button>`;
     $("#summary").textContent = text;
     wireSend(text);
