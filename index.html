@@ -324,7 +324,7 @@ a.primary.ig:hover { background-color: #9E2A6C; }
     </div>
     <div class="readout">
       <div><span class="label" data-t="rdMaterial">Material</span><b data-t="rdMaterialV">PLA · 11 colors</b></div>
-      <div><span class="label" data-t="rdLayer">Layer height</span><b>0.12 – 0.28 mm</b></div>
+      <div><span class="label" data-t="rdLayer">Layer height</span><b data-t="rdLayerV">0.12 – 0.28 mm</b></div>
       <div><span class="label" data-t="rdBuild">Max build</span><b>256 × 256 × 256 mm</b></div>
       <div><span class="label" data-t="rdTurn">Turnaround</span><b data-t="rdTurnV">3 – 5 days</b></div>
       <div><span class="label" data-t="rdWarranty">Warranty</span><b data-t="rdWarrantyV">30 days</b></div>
@@ -438,7 +438,8 @@ function priceOf(p) {
   if (p.grams < 15) v = Math.min(v, PRICING.smallCap);
   return Math.max(v, floorOf(p));
 }
-const fmtTime = h => `${Math.floor(h)}h ${String(Math.round((h % 1) * 60)).padStart(2, "0")}m`;
+const fmtTime = h => { const m = Math.round(h * 60), hh = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0");
+  return typeof lang !== "undefined" && lang === "nl" ? `${hh} u ${mm} min` : `${hh}h ${mm}m`; };
 
 const PRODUCTS = [
   { id: "custom", name: "Your Own Idea", cat: "Custom", custom: true, size: "Up to 256 mm", colors: Object.keys(COLORS), image: "" },
@@ -514,54 +515,54 @@ const CAT_NL = { All: "Alles", Toys: "Speelgoed", Home: "Huis", Desk: "Bureau", 
 const COLOR_NL = { Black: "Zwart", White: "Wit", Gray: "Grijs", Silver: "Zilver", Gold: "Goud", Yellow: "Geel", Brown: "Bruin", "Maroon Red": "Bordeauxrood", Pink: "Roze", Cyan: "Cyaan", Green: "Groen", Multicolor: "Meerkleurig" };
 const NL = {
   custom: { name: "Jouw eigen idee", size: "Tot 256 mm" },
-  katana: { name: "Inklapbare katana", size: "Schuift in en uit" },
+  katana: { name: "Inschuifbare katana", size: "Schuift in en uit" },
   fidget: { name: "Tandwiel-fidgetkubus", size: "Draaiende tandwielen" },
   octopus: { name: "Mini-octopus" },
   snake: { name: "Schattige slang" },
-  spinner: { name: "Tandwiel-fidgetspinner" },
-  cat: { name: "Flexi-kat sleutelhanger", note: "Sleutelring niet inbegrepen" },
-  axolotl: { name: "Flexi-axolotl", note: "Sleutelring niet inbegrepen" },
+  spinner: { name: "Planetaire tandwiel-fidgetspinner" },
+  cat: { name: "Flexibele kat-sleutelhanger", note: "Sleutelring niet inbegrepen" },
+  axolotl: { name: "Flexibele axolotl", note: "Sleutelring niet inbegrepen" },
   shark: { name: "Beweegbare haai" },
   fcube: { name: "Schuine fidgetkubus" },
   illusion: { name: "Magische illusie-spinner" },
-  jeep: { name: "Jeep-bouwkaart" },
+  jeep: { name: "Jeep-bouwpakket op een kaart" },
   whistle: { name: "Vogelfluitje" },
   dragon: { name: "Beweegbare kristaldraak" },
-  trex: { name: "Flexi T-rex-skelet" },
-  gearshift: { name: "Versnellingspook-fidget" },
-  planter: { name: "Low-poly plantenpot", size: "Klein vetplantpotje" },
-  hook: { name: "Wandhaak", note: "Plakstrip of schroeven (niet inbegrepen)" },
-  keycat: { name: "Kat-sleutelhouder" },
+  trex: { name: "Flexibel T-rex-skelet" },
+  gearshift: { name: "Fidget-versnellingspook" },
+  planter: { name: "Hoekige plantenpot", size: "Klein potje voor een vetplant" },
+  hook: { name: "Wandhaak", note: "Vast te plakken of te schroeven (plakstrip en schroeven niet inbegrepen)" },
+  keycat: { name: "Sleutelhouder met kat" },
   toothbrush: { name: "Tandenborstelkoker voor op reis" },
   coaster: { name: "Honingraat-onderzetter" },
   headset: { name: "Koptelefoonstandaard", size: "Past bij de meeste koptelefoons" },
   phone: { name: "Telefoonstandaard", size: "Voor telefoons en tablets" },
   hphook: { name: "Koptelefoonhouder", note: "Klemt aan je bureau" },
   pencil: { name: "T-rex-pennenhouder" },
-  winder: { name: "Kabelorganizer" },
+  winder: { name: "Kabelopwinder" },
   card: { name: "Visitekaartjeshouder" },
   xbox: { name: "Onzichtbare controllerstandaard" },
-  sdcard: { name: "SD-kaart opbergdoosje", note: "Scharnier heeft 6 kleine M2-schroefjes nodig (niet inbegrepen)" },
-  cookie: { name: "Winterse koekjesvormen" },
+  sdcard: { name: "Opbergdoosje voor SD-kaarten", note: "Scharnier heeft 6 kleine M2-schroefjes nodig (niet inbegrepen)" },
+  cookie: { name: "Winterse koekjesuitstekers" },
   egg: { name: "Eierhouder" },
   spice: { name: "Kruidenrek", note: "Voor aan de muur (schroeven niet inbegrepen)" },
-  dice: { name: "Kasteel-dobbeltoren", size: "Bakje vult zichzelf", note: "Geprinte veer inbegrepen, dobbelstenen niet" },
+  dice: { name: "Kasteel-dobbeltoren", size: "Dobbelstenen rollen vanzelf terug", note: "Geprinte veer inbegrepen, dobbelstenen niet" },
   cardbox: { name: "Speelkaartendoosje", note: "Kaarten niet inbegrepen" },
   maze: { name: "Doolhof-puzzeldoos" },
   twisty: { name: "Draaibare fidgetbal" },
   chess: { name: "Oprolbaar reisschaakspel" },
-  feeder: { name: "Moderne vogelvoederplaats", note: "Ophangtouw en vogelzaad niet inbegrepen" },
-  label: { name: "Plantenlabels voor de tuin" },
-  alivetree: { name: "Kerstboom die echt lijkt", size: "150 mm hoog" },
+  feeder: { name: "Modern vogelvoederhuisje", note: "Ophangtouw en vogelzaad niet inbegrepen" },
+  label: { name: "Plantenlabels" },
+  alivetree: { name: "Levensechte kerstboom", size: "150 mm hoog" },
   vase: { name: "Spiraalvaas", size: "Decoratief, niet waterdicht" },
   fox: { name: "Schattige vos" },
-  pillars: { name: "Draaiende pilarenvaas" },
-  skull: { name: "Draaibare schedel-fidget" },
+  pillars: { name: "Gedraaide pilarenvaas" },
+  skull: { name: "Fidget-schedel om te draaien" },
   gridfinity: { name: "Gridfinity-opbergbakjes" },
-  airtag: { name: "AirTag-sleutelhangerhouder", note: "Sleutelring en AirTag niet inbegrepen" },
+  airtag: { name: "AirTag-sleutelhanger", note: "Sleutelring en AirTag niet inbegrepen" },
   cattoy: { name: "Kattenspeeltjes" },
   poobag: { name: "Poepzakjeshouder voor honden", note: "Past op standaard rolletjes (zakjes niet inbegrepen)" },
-  keys: { name: "Naam-sleutelhanger", size: "Jouw naam", note: "Sleutelring niet inbegrepen" },
+  keys: { name: "Sleutelhanger met naam", size: "Jouw naam", note: "Sleutelring niet inbegrepen" },
 };
 
 const STR = {
@@ -569,7 +570,7 @@ const STR = {
     navGallery: "Gallery", navCustom: "Custom order", navHow: "How ordering works", navFaq: "FAQ", navContact: "Contact us", cart: "Cart",
     tagline: "Prints made to order, layer by layer. Pick a piece and a filament color, or ask for something custom.",
     heroCta: "Browse the gallery ↓",
-    rdMaterial: "Material", rdMaterialV: "PLA · 11 colors", rdLayer: "Layer height", rdBuild: "Max build", rdTurn: "Turnaround", rdTurnV: "3 – 5 days", rdWarranty: "Warranty", rdWarrantyV: "{days} days",
+    rdMaterial: "Material", rdMaterialV: "PLA · 11 colors", rdLayer: "Layer height", rdLayerV: "0.12 – 0.28 mm", rdBuild: "Max build", rdTurn: "Turnaround", rdTurnV: "3 – 5 days", rdWarranty: "Warranty", rdWarrantyV: "{days} days",
     hGallery: "Gallery",
     galleryNote: "Prices are for the 3D printed parts only. Extra things like key rings, screws, magnets or string are <strong>not included</strong>, unless they are printed. Every print can also be <strong>multicolor</strong>: up to 4 colors for {multi} extra. Most prints also come in other <strong>sizes</strong>.",
     searchLabel: "Search", searchPh: "Search prints…", sortLabel: "Sort", featured: "Featured", priceAsc: "Price: low to high", priceDesc: "Price: high to low",
@@ -583,6 +584,7 @@ const STR = {
     about1: "AnyThing 3D is a small 3D printing shop run by one maker. Every piece is printed to order in PLA on a Bambu Lab A1, then checked and cleaned up by hand before you get it.",
     about2: "Can't find what you want in the gallery? Send us your idea. Name signs, replacement parts, gifts: if it fits on the printer, we can probably make it.",
     hFaq: "Questions",
+    ariaFilter: "Filter by category", ariaClose: "Close", ariaLang: "Language",
     hContact: "Contact us", contactLead: "Questions about a print, a color or a custom idea? Send us a message. We usually reply the same day.",
     findUs: "Find us on", fbPage: "Facebook page", waGreeting: "Hi AnyThing 3D!",
     all: "All", priceOnReq: "Price on request", credit: "Design &amp; photo: {by} on MakerWorld",
@@ -617,36 +619,37 @@ const STR = {
   },
   nl: {
     navGallery: "Galerij", navCustom: "Op maat", navHow: "Zo bestel je", navFaq: "Vragen", navContact: "Contact", cart: "Winkelwagen",
-    tagline: "Prints op bestelling, laag voor laag. Kies een ontwerp en een kleur, of vraag iets op maat.",
+    tagline: "Op bestelling geprint, laag voor laag. Kies een ontwerp en een kleur, of vraag iets op maat aan.",
     heroCta: "Bekijk de galerij ↓",
-    rdMaterial: "Materiaal", rdMaterialV: "PLA · 11 kleuren", rdLayer: "Laaghoogte", rdBuild: "Max. formaat", rdTurn: "Levertijd", rdTurnV: "3 – 5 dagen", rdWarranty: "Garantie", rdWarrantyV: "{days} dagen",
+    rdMaterial: "Materiaal", rdMaterialV: "PLA · 11 kleuren", rdLayer: "Laaghoogte", rdLayerV: "0,12 – 0,28 mm", rdBuild: "Max. printformaat", rdTurn: "Levertijd", rdTurnV: "3 – 5 dagen", rdWarranty: "Garantie", rdWarrantyV: "{days} dagen",
     hGallery: "Galerij",
-    galleryNote: "Prijzen zijn alleen voor de 3D-geprinte onderdelen. Extra dingen zoals sleutelringen, schroeven, magneten of touw zijn <strong>niet inbegrepen</strong>, tenzij ze geprint zijn. Elke print kan ook <strong>meerkleurig</strong>: tot 4 kleuren voor {multi} extra. De meeste prints zijn er ook in andere <strong>formaten</strong>.",
+    galleryNote: "De prijzen gelden alleen voor de geprinte onderdelen. Losse onderdelen zoals sleutelringen, schroeven, magneten of touw zijn <strong>niet inbegrepen</strong>, tenzij ze geprint zijn. Elke print kan ook <strong>meerkleurig</strong>: tot 4 kleuren voor {multi} extra. De meeste prints zijn er ook in andere <strong>formaten</strong>.",
     searchLabel: "Zoeken", searchPh: "Zoek prints…", sortLabel: "Sorteren", featured: "Uitgelicht", priceAsc: "Prijs: laag naar hoog", priceDesc: "Prijs: hoog naar laag",
     noResults: "Geen prints gevonden voor “{q}”. Probeer een ander woord, of vraag het aan als print op maat.",
     hHow: "Zo bestel je",
     s1h: "Kiezen", s1p: "Zet prints in je winkelwagen, of beschrijf een print op maat.",
     s2h: "Bericht sturen", s2p: "Stuur je aanvraag via WhatsApp of Messenger. Het bericht staat al voor je klaar.",
     s3h: "Bevestigen", s3p: "We sturen je de definitieve prijs en bevestigen je bestelling.",
-    s4h: "Printen", s4p: "Je stukken gaan op de printer en zijn meestal binnen 3 tot 5 dagen klaar. We sturen je een bericht als ze klaar zijn.",
+    s4h: "Printen", s4p: "Je prints gaan op de printer en zijn meestal binnen 3 tot 5 dagen klaar. Zodra ze klaar zijn, sturen we je een bericht.",
     hAbout: "Over AnyThing 3D",
     about1: "AnyThing 3D is een kleine 3D-printshop, gerund door één maker. Elk stuk wordt op bestelling geprint in PLA op een Bambu Lab A1, en daarna met de hand gecontroleerd en netjes afgewerkt.",
     about2: "Staat wat je zoekt niet in de galerij? Stuur ons je idee. Naambordjes, vervangende onderdelen, cadeaus: als het op de printer past, kunnen we het waarschijnlijk maken.",
     hFaq: "Vragen",
+    ariaFilter: "Filter op categorie", ariaClose: "Sluiten", ariaLang: "Taal",
     hContact: "Contact", contactLead: "Vragen over een print, een kleur of een eigen idee? Stuur ons een bericht. We reageren meestal dezelfde dag.",
     findUs: "Vind ons op", fbPage: "Facebook-pagina", waGreeting: "Hoi AnyThing 3D!",
-    all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp &amp; foto: {by} op MakerWorld",
-    customSpec: "PLA · {size} · jij beschrijft het, wij geven een prijs", print: "printtijd",
+    all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp en foto: {by} op MakerWorld",
+    customSpec: "PLA · {size} · jij beschrijft het, wij maken een prijs", print: "printtijd",
     size: "Formaat", original: "origineel", sizeWord: "formaat",
     sizeNote: "Grootste kant {mm} mm · max. {max}% past op onze printer", sizeNoteEst: "Grootste kant ongeveer {mm} mm · max. {max}% past op onze printer",
     sizeClamped: "{max}% is het grootste formaat dat op onze printer past", inCart: "{n} in winkelwagen",
     describe: "Beschrijf je idee", chooseColors: "Kies kleuren", addToCart: "In winkelwagen",
-    removeOne: "Eén {name} verwijderen", addOne: "Nog één {name} toevoegen", multicolor: "Meerkleurig",
+    removeOne: "Eén {name} minder", addOne: "Nog één {name} erbij", multicolor: "Meerkleurig",
     added: "{name} ({color}) toegevoegd · Totaal {total}",
     cartTitle: "Je winkelwagen", customTitle: "Print op maat", multiTitle: "Meerkleurig",
     empty: "Je winkelwagen is leeg. Voeg een print uit de galerij toe om te bestellen.",
     each: "per stuk", total: "Totaal", remove: "Verwijderen", decrease: "Minder", increase: "Meer",
-    yourName: "Je naam", phone: "Telefoonnummer", phonePh: "bijv. 06 12345678", notes: "Opmerkingen (eigen tekst, deadline)", prepare: "Bestelaanvraag klaarmaken",
+    yourName: "Je naam", phone: "Telefoonnummer", phonePh: "bijv. 06 12345678", notes: "Opmerkingen (bijv. eigen tekst of een datum)", prepare: "Bestelaanvraag klaarmaken",
     deliverQ: "Ophalen of verzenden?", pickup: "Ophalen", shipping: "Verzenden", pickNote: "We sturen je het ophaaladres in de chat.",
     address: "Je adres (straat, huisnummer, postcode, plaats)", shipNote: "De verzendkosten spreken we af in de chat.",
     mDeliveryPick: "Levering: Ophalen", mDeliveryShip: "Levering: Verzenden\nAdres: {addr}",
@@ -657,13 +660,13 @@ const STR = {
     mOrder: "AnyThing 3D bestelaanvraag", mTotal: "Totaal", mName: "Naam", mContact: "Contact", mNotes: "Opmerkingen",
     cIntro: "Vertel ons wat je geprint wilt hebben: een vervangend onderdeel, een figuur, een naambordje, een cadeau. Je krijgt eerst een prijs van ons voordat we iets printen.",
     cWhat: "Wat wil je laten printen?", cWhatPh: "bijv. een wandhaak voor mijn fiets", cColor: "PLA-kleur", cMulti: "Meerkleurig (beschrijf hierboven)", cNotSure: "Weet ik nog niet",
-    cDate: "Nodig op", cDatePh: "bijv. 20 november", cRef: "Link naar een model of voorbeeld (optioneel)", cRefPh: "bijv. een link van Printables of Thingiverse",
+    cDate: "Uiterlijk nodig op", cDatePh: "bijv. 20 november", cRef: "Link naar een model of voorbeeld (optioneel)", cRefPh: "bijv. een link van Printables of Thingiverse",
     cFile: "Heb je een modelbestand (.stl of .3mf) of een foto? Stuur het via WhatsApp mee met je aanvraag.", cPrepare: "Mijn aanvraag klaarmaken",
     cReady: "Je aanvraag is klaar. Stuur hem naar ons en we reageren met een prijs.", cEdit: "Aanvraag aanpassen",
-    mCustom: "AnyThing 3D aanvraag op maat", mWhat: "Wat ik wil", mColor: "Kleur", mDate: "Nodig op", mNoRush: "Geen haast", mRef: "Voorbeeldlink", mNone: "Geen",
-    mIntro: "<strong>{name}</strong> in maximaal 4 kleuren. Kies elke kleur en schrijf op welk deel hij komt.",
+    mCustom: "AnyThing 3D aanvraag op maat", mWhat: "Wat ik wil", mColor: "Kleur", mDate: "Uiterlijk nodig op", mNoRush: "Geen haast", mRef: "Voorbeeldlink", mNone: "Geen",
+    mIntro: "<strong>{name}</strong> in maximaal 4 kleuren. Kies per kleur op welk deel die komt.",
     mColorN: "Kleur {n}", optional: "(optioneel)", noColor: "Geen kleur", goesOn: "Komt op", mPh: ["bijv. lijf", "bijv. ogen", "bijv. tekst", "bijv. voet"],
-    price: "Prijs", multiErr: "Kies minstens 2 verschillende kleuren.", addMulti: "Meerkleurig in winkelwagen",
+    price: "Prijs", multiErr: "Kies minstens 2 verschillende kleuren.", addMulti: "In winkelwagen",
   },
 };
 
@@ -681,7 +684,7 @@ const FAQ = [
   { en: ["Can PLA go in the dishwasher, the sun or a hot car?", "No. PLA gets soft from about 55 °C. Wash it by hand in lukewarm water, and keep it out of hot cars and strong summer sun."],
     nl: ["Mag PLA in de vaatwasser, de zon of een warme auto?", "Nee. PLA wordt zacht vanaf ongeveer 55 °C. Was het met de hand in lauw water en houd het uit een warme auto en de felle zomerzon."] },
   { en: ["Is it food safe?", "We can't promise that. Cookie cutters are fine for short contact with dough. Wash them by hand after use."],
-    nl: ["Is het voedselveilig?", "Dat kunnen we niet beloven. Koekjesvormen zijn prima voor kort contact met deeg. Was ze na gebruik met de hand."] },
+    nl: ["Is het voedselveilig?", "Dat kunnen we niet beloven. Koekjesuitstekers zijn prima voor kort contact met deeg. Was ze na gebruik met de hand af."] },
   { en: ["Pickup or shipping?", "Both are possible. Choose in the order form. If you want it shipped, we agree on the shipping cost in the chat first."],
     nl: ["Ophalen of verzenden?", "Allebei kan. Kies het in het bestelformulier. Wil je het laten verzenden, dan spreken we eerst de verzendkosten af in de chat."] },
 ];
@@ -700,7 +703,8 @@ const cName = c => lang === "nl" ? (COLOR_NL[c] || c) : c;
 const catName = c => lang === "nl" ? (CAT_NL[c] || c) : (c === "All" ? t("all") : c);
 
 const $ = s => document.querySelector(s);
-const money = n => CURRENCY + n.toFixed(2);
+/* Dutch writes prices as € 1,99; English as €1.99 */
+const money = n => lang === "nl" ? `${CURRENCY} ${n.toFixed(2).replace(".", ",")}` : CURRENCY + n.toFixed(2);
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem("a3d-cart") || "[]"); } catch (e) {}
 const save = () => { try { localStorage.setItem("a3d-cart", JSON.stringify(cart)); } catch (e) {} };
@@ -1067,6 +1071,10 @@ function applyLang() {
   document.querySelectorAll("[data-t]").forEach(el => { el.innerHTML = t(el.dataset.t); });
   document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
   $("#openCart").setAttribute("aria-label", t("cart"));
+  $("#filters").setAttribute("aria-label", t("ariaFilter"));
+  $("#closeCart").setAttribute("aria-label", t("ariaClose"));
+  $("#drawer").setAttribute("aria-label", t("cart"));
+  $(".lang").setAttribute("aria-label", t("ariaLang"));
   renderFilters(); renderToolbar(); renderGrid(); renderContact(); renderFaq(); updateCount();
   if (drawerMode) openCart(true, drawerMode === "cart" ? undefined : drawerMode, drawerArg);
 }
