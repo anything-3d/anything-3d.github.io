@@ -271,6 +271,10 @@ a.primary.ms:hover { background-color: #0550C8; }
 
 /* Size picker on cards */
 .scale-pick { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .8125rem; color: var(--ink-soft); }
+.scale-in { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); color: var(--ink); }
+.scale-in input { font: inherit; width: 5.5em; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+.scale-in input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+.scale-note { font-size: .75rem; color: var(--ink-soft); margin-top: -4px; }
 .scale-pick select { font: inherit; font-family: var(--f-mono); font-size: .8125rem; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--plate); color: var(--ink); min-width: 0; flex: 1; max-width: 190px; }
 
 /* About and FAQ */
@@ -492,7 +496,16 @@ PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 /* ===== MORE SETTINGS ===== */
 const WARRANTY_DAYS = 30;          // free reprint for breaks or print faults within this many days
 const INSTAGRAM_URL = "";          // e.g. "https://www.instagram.com/yourname" — an Instagram button appears when filled in
-const SCALES = [0.75, 1, 1.25, 1.5];
+const BED_MM = 256;                // Bambu Lab A1 build volume: 256 × 256 × 256 mm
+const MIN_SCALE = 0.5;             // smallest size customers can type (50%)
+/* Largest side of each print at 100%, in mm. [mm, true] = measured from the MakerWorld model file; others are estimates. */
+const SIZE_MM = {
+  katana: [177, true], fidget: [48, true], octopus: [105, true], snake: [62, true], spinner: [67, true],
+  cat: [70], axolotl: [80], shark: [150], fcube: [40], illusion: [60], jeep: [86], whistle: [60], dragon: [190], trex: [180], gearshift: [50],
+  planter: [80], hook: [70], keycat: [120], coaster: [100], headset: [250], phone: [110], pencil: [150], winder: [100], card: [95],
+  cookie: [80], maze: [90], twisty: [70], chess: [250], feeder: [180], label: [100], vase: [150], fox: [50], pillars: [120], skull: [70],
+  cattoy: [50], keys: [70],
+};
 /* Prints that keep one size because they have to fit something */
 const FIXED_SIZE = ["alivetree", "xbox", "airtag", "gridfinity", "sdcard", "poobag", "toothbrush", "hphook", "cardbox", "egg", "spice", "dice"];
 
@@ -574,7 +587,9 @@ const STR = {
     findUs: "Find us on", fbPage: "Facebook page", waGreeting: "Hi AnyThing 3D!",
     all: "All", priceOnReq: "Price on request", credit: "Design &amp; photo: {by} on MakerWorld",
     customSpec: "PLA · {size} · you describe it, we price it", print: "print",
-    size: "Size", original: "original", sizeWord: "size", inCart: "{n} in cart",
+    size: "Size", original: "original", sizeWord: "size",
+    sizeNote: "Largest side {mm} mm · max {max}% fits our printer", sizeNoteEst: "Largest side about {mm} mm · max {max}% fits our printer",
+    sizeClamped: "{max}% is the biggest size that fits our printer", inCart: "{n} in cart",
     describe: "Describe your idea", chooseColors: "Choose colors", addToCart: "Add to cart",
     removeOne: "Remove one {name}", addOne: "Add one more {name}", multicolor: "Multicolor",
     added: "Added {name} ({color}) · Cart total {total}",
@@ -622,7 +637,9 @@ const STR = {
     findUs: "Vind ons op", fbPage: "Facebook-pagina", waGreeting: "Hoi AnyThing 3D!",
     all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp &amp; foto: {by} op MakerWorld",
     customSpec: "PLA · {size} · jij beschrijft het, wij geven een prijs", print: "printtijd",
-    size: "Formaat", original: "origineel", sizeWord: "formaat", inCart: "{n} in winkelwagen",
+    size: "Formaat", original: "origineel", sizeWord: "formaat",
+    sizeNote: "Grootste kant {mm} mm · max. {max}% past op onze printer", sizeNoteEst: "Grootste kant ongeveer {mm} mm · max. {max}% past op onze printer",
+    sizeClamped: "{max}% is het grootste formaat dat op onze printer past", inCart: "{n} in winkelwagen",
     describe: "Beschrijf je idee", chooseColors: "Kies kleuren", addToCart: "In winkelwagen",
     removeOne: "Eén {name} verwijderen", addOne: "Nog één {name} toevoegen", multicolor: "Meerkleurig",
     added: "{name} ({color}) toegevoegd · Totaal {total}",
@@ -657,8 +674,8 @@ const FAQ = [
     nl: ["Hoe betaal ik?", "Met Tikkie of een bankoverschrijving, of contant bij het ophalen. We sturen de betaalgegevens in de chat nadat we je bestelling bevestigen."] },
   { en: ["Is there a warranty?", "Yes, {days} days. If a print breaks during normal use or has a printing fault within {days} days, we reprint it for free. After {days} days, a reprint costs the normal price. Damage from drops, heat or misuse isn't covered."],
     nl: ["Is er garantie?", "Ja, {days} dagen. Breekt een print bij normaal gebruik of zit er een printfout in binnen {days} dagen, dan printen we hem gratis opnieuw. Na {days} dagen betaal je voor een nieuwe print de normale prijs. Schade door vallen, hitte of verkeerd gebruik valt er niet onder."] },
-  { en: ["Can I get a different size?", "Yes. Choose a size on the product card, from 75% to 150%. Bigger sizes cost more because they use more filament and print time. Some prints keep one size because they have to fit something, like an AirTag or a controller. If a big size won't fit our printer (256 mm), we tell you in the chat."],
-    nl: ["Kan ik een ander formaat krijgen?", "Ja. Kies een formaat op de productkaart, van 75% tot 150%. Grotere formaten kosten meer, omdat er meer filament en printtijd in gaat. Sommige prints hebben één vast formaat, omdat ze ergens op moeten passen, zoals een AirTag of een controller. Past een groot formaat niet op onze printer (256 mm), dan laten we je dat weten in de chat."] },
+  { en: ["Can I get a different size?", "Yes. Type any size on the product card, from 50% up to the biggest that fits our 256 mm printer. The price updates by itself: bigger sizes cost more because they use more filament and print time. If you type too much, it jumps to the biggest size that fits. Some prints keep one size because they have to fit something, like an AirTag or a controller."],
+    nl: ["Kan ik een ander formaat krijgen?", "Ja. Typ op de productkaart elk formaat, van 50% tot het grootste dat op onze printer van 256 mm past. De prijs rekent zichzelf uit: grotere formaten kosten meer, omdat er meer filament en printtijd in gaat. Typ je te veel, dan springt het naar het grootste formaat dat past. Sommige prints hebben één vast formaat, omdat ze ergens op moeten passen, zoals een AirTag of een controller."] },
   { en: ["Can I have more than one color?", "Yes. Tap the rainbow dot on a print, pick up to 4 colors and write where each one goes. Multicolor costs {multi} extra."],
     nl: ["Kan ik meer dan één kleur kiezen?", "Ja. Tik op het regenboogbolletje bij een print, kies tot 4 kleuren en schrijf waar elke kleur komt. Meerkleurig kost {multi} extra."] },
   { en: ["Can PLA go in the dishwasher, the sun or a hot car?", "No. PLA gets soft from about 55 °C. Wash it by hand in lukewarm water, and keep it out of hot cars and strong summer sun."],
@@ -691,7 +708,10 @@ const picked = {}, pickedScale = {};
 let filter = "All", sortBy = "featured", search = "";
 
 /* ===== SIZES: filament grows with volume, print time a bit less ===== */
-const canScale = p => !p.custom && !FIXED_SIZE.includes(p.id);
+const canScale = p => !p.custom && !FIXED_SIZE.includes(p.id) && !!SIZE_MM[p.id];
+/* Biggest size that still fits the printer, rounded down to a whole percent */
+const maxScaleOf = p => canScale(p) ? Math.max(1, Math.floor(BED_MM / SIZE_MM[p.id][0] * 100) / 100) : 1;
+const clampScale = (p, s) => Math.min(maxScaleOf(p), Math.max(MIN_SCALE, Math.round(s * 100) / 100));
 const scaled = (p, s) => s === 1 ? p : { ...p, grams: p.grams * s ** 3, hours: p.hours * s ** 2.5, market: p.market ? p.market * s ** 2 : undefined };
 const priceAt = (p, s = 1) => s === 1 ? p.price : priceOf(scaled(p, s));
 const pct = s => Math.round(s * 100) + "%";
@@ -723,7 +743,7 @@ const deliveryFields = k => `<fieldset class="deliver">
 const deliveryText = k => $(`#${k}Ship`).checked ? t("mDeliveryShip", { addr: $(`#${k}Addr`).value.trim() }) : t("mDeliveryPick");
 document.addEventListener("change", e => {
   const r = e.target;
-  if (r.matches("select[data-scale]")) { pickedScale[r.dataset.scale] = +r.value; renderGrid(); $(`#sc-${r.dataset.scale}`)?.focus(); return; }
+  if (r.matches("input[data-scale]")) { commitScale(r); return; }
   if (r.type !== "radio" || !r.name.endsWith("Deliver")) return;
   const k = r.name.slice(0, -7), ship = r.value === "Shipping";
   $(`#${k}AddrWrap`).hidden = !ship; $(`#${k}Addr`).required = ship; $(`#${k}PickNote`).hidden = ship;
@@ -771,6 +791,25 @@ function renderToolbar() {
   $("#sort").innerHTML = [["featured", t("featured")], ["price-asc", t("priceAsc")], ["price-desc", t("priceDesc")]]
     .map(([v, l]) => `<option value="${v}"${v === sortBy ? " selected" : ""}>${l}</option>`).join("");
 }
+/* Typed sizes: any whole percent from 50% up to the biggest that fits the printer */
+function commitScale(r) {
+  const p = PRODUCTS.find(x => x.id === r.dataset.scale);
+  const v = parseFloat(r.value);
+  const s = clampScale(p, isFinite(v) ? v / 100 : 1);
+  if (isFinite(v) && v / 100 > maxScaleOf(p)) toast(t("sizeClamped", { max: Math.round(maxScaleOf(p) * 100) }));
+  pickedScale[p.id] = s;
+  renderGrid();
+  $(`#sc-${p.id}`)?.focus();
+}
+document.addEventListener("input", e => {
+  const r = e.target; if (!r.matches("input[data-scale]")) return;
+  const p = PRODUCTS.find(x => x.id === r.dataset.scale), v = parseFloat(r.value);
+  if (!isFinite(v)) return;
+  if (v / 100 > maxScaleOf(p)) { r.value = Math.round(maxScaleOf(p) * 100); toast(t("sizeClamped", { max: r.value })); }
+  const s = parseFloat(r.value) / 100;
+  if (s >= MIN_SCALE) { pickedScale[p.id] = Math.round(s * 100) / 100; liveScale(p, pickedScale[p.id]); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("input[data-scale]")) { e.preventDefault(); commitScale(e.target); } });
 $("#search").addEventListener("input", e => { search = e.target.value; renderGrid(); });
 $("#sort").addEventListener("change", e => { sortBy = e.target.value; renderGrid(); });
 
@@ -802,6 +841,16 @@ function visibleProducts() {
   return list;
 }
 
+const scaleNote = (p, s) => t(SIZE_MM[p.id][1] ? "sizeNote" : "sizeNoteEst", { mm: Math.round(SIZE_MM[p.id][0] * s), max: Math.round(maxScaleOf(p) * 100) });
+/* While typing a size: update this card's price, specs and note without rebuilding the grid */
+function liveScale(p, s) {
+  const card = document.querySelector(`.card[data-pid="${p.id}"]`); if (!card) return;
+  const sp = scaled(p, s);
+  card.querySelector(".price").textContent = money(priceAt(p, s));
+  card.querySelector(".spec").textContent = `PLA · ${Math.round(sp.grams)} g · ${fmtTime(sp.hours)} ${t("print")}${pSize(p) && s === 1 ? ` · ${pSize(p)}` : ""}`;
+  card.querySelector("[data-scale-note]").innerHTML = scaleNote(p, s);
+}
+
 function renderGrid() {
   const list = visibleProducts();
   $("#noResults").hidden = list.length > 0;
@@ -828,7 +877,11 @@ function renderGrid() {
           ${p.custom ? "" : `<button type="button" class="sw sw-multi" aria-label="${t("multicolor")} +${money(MULTICOLOR_EXTRA)}" title="${t("multicolor")} (+${money(MULTICOLOR_EXTRA)})" aria-pressed="${col === MULTI}" data-id="${p.id}" data-color="${MULTI}"></button>`}
           <span class="sw-name">${col === MULTI ? `${t("multicolor")} <b class="plus">+${money(MULTICOLOR_EXTRA)}</b>` : cName(col)}</span>
         </div>
-        ${canScale(p) ? `<label class="scale-pick" for="sc-${p.id}">${t("size")}<select id="sc-${p.id}" data-scale="${p.id}">${SCALES.map(s => `<option value="${s}"${s === sc ? " selected" : ""}>${pct(s)}${s === 1 ? ` (${t("original")})` : ""} · ${money(priceAt(p, s))}</option>`).join("")}</select></label>` : ""}
+        ${canScale(p) ? `<div class="scale-pick">
+          <label for="sc-${p.id}">${t("size")}</label>
+          <span class="scale-in"><input type="number" id="sc-${p.id}" data-scale="${p.id}" min="${MIN_SCALE * 100}" max="${Math.round(maxScaleOf(p) * 100)}" step="1" inputmode="numeric" value="${Math.round(sc * 100)}"><span>%</span></span>
+        </div>
+        <div class="scale-note" data-scale-note="${p.id}">${scaleNote(p, sc)}</div>` : ""}
         ${p.custom ? `<button type="button" class="add custom-btn" data-custom="1">${t("describe")}</button>`
           : n ? `<div class="stepper">
               <button type="button" data-remove="${p.id}" aria-label="${t("removeOne", { name })}">−</button>
@@ -844,7 +897,7 @@ function renderGrid() {
 
 /* Drop cart lines for products, colors or sizes that no longer exist */
 cart = cart.filter(i => { const p = PRODUCTS.find(p => p.id === i.id && !p.custom); if (!p || !(i.qty > 0)) return false;
-  const s = i.scale || 1; if (!SCALES.includes(s) || (s !== 1 && !canScale(p))) return false;
+  const s = i.scale || 1; if (!(s > 0) || (s !== 1 && !canScale(p))) return false; i.scale = s === 1 ? 1 : clampScale(p, s);
   return i.color === MULTI ? Array.isArray(i.parts) && i.parts.length >= 2 && i.parts.every(x => COLORS[x.color]) : p.colors.includes(i.color); });
 
 /* Multicolor lines cost the normal price + MULTICOLOR_EXTRA and carry a color plan: [{ color, where }] */
