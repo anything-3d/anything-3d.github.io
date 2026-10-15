@@ -219,6 +219,33 @@ form.order input, form.order textarea { font: inherit; padding: 10px 12px; borde
 .summary { white-space: pre-wrap; background: var(--plate); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0; max-height: 220px; overflow: auto; }
 .note { font-size: .875rem; color: var(--ink-soft); margin: 0; }
 
+/* Accounts */
+.acct-btn { padding: 7px 14px; }
+.perk { margin: 0; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--pei) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--pei) 55%, var(--line)); font-size: .9375rem; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; font: inherit; }
+.acct-sec { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.acct-sec h3 { font-family: var(--f-display); font-weight: 700; font-size: .9375rem; }
+form.order .check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+form.order .check input { accent-color: var(--accent); margin: 0; }
+.row-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.danger { color: #C2332B; border-color: currentColor; }
+.ord { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--plate); }
+.ord-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ord ul { margin: 0; padding-left: 18px; font-size: .875rem; }
+.ord .ord-sum { display: flex; justify-content: space-between; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pill { font-family: var(--f-mono); font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--ink-soft); }
+.pill.st-confirmed, .pill.st-printing { color: var(--accent); border-color: var(--accent); }
+.pill.st-ready { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pill.st-cancelled { text-decoration: line-through; }
+.ord select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.fav-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.fav-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.photo .fav { position: absolute; right: 12px; bottom: 12px; z-index: 1; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.125rem; line-height: 1; }
+.photo .fav[aria-pressed="true"] { color: #D6336C; border-color: #D6336C; }
+.privacy h3 { font-family: var(--f-display); font-weight: 700; font-size: .9375rem; margin-top: 6px; }
+.privacy p, .privacy ul { margin: 0; font-size: .9375rem; }
+.privacy ul { padding-left: 18px; }
+
 /* Button hover: buttons slowly grow and change color */
 .add, .primary, .hero-cta, .cart-btn, .chip, .stepper button, nav.links a {
   transition: transform .5s cubic-bezier(.22, 1, .36, 1), box-shadow .5s ease, background-color .35s ease, color .35s ease, border-color .35s ease, filter .35s ease;
@@ -310,6 +337,7 @@ a.primary.ig:hover { background-color: #9E2A6C; }
         <button type="button" data-lang="nl" aria-pressed="false" title="Nederlands">NL</button>
         <button type="button" data-lang="en" aria-pressed="true" title="English">EN</button>
       </div>
+      <button class="chip acct-btn" id="acctBtn" type="button" hidden>Log in</button>
       <button class="cart-btn" id="openCart" type="button" aria-label="Open cart"><span data-t="cart">Cart</span> <span class="count" id="cartCount">0</span><span class="cart-total" id="cartTotal" hidden></span></button>
     </nav>
   </div>
@@ -378,6 +406,7 @@ a.primary.ig:hover { background-color: #9E2A6C; }
 <footer>
   <div class="wrap">
     <span>© AnyThing 3D</span>
+    <span><button type="button" class="linkbtn" id="privacyLink" data-privacy="1" hidden data-t="privacy">Privacy</button></span>
     <span><span data-t="findUs">Find us on</span> <a data-fb href="#" target="_blank" rel="noopener">Facebook</a></span>
   </div>
 </footer>
@@ -495,6 +524,11 @@ const PRODUCTS = [
 ];
 PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 /* ====================================== */
+/* ===== ACCOUNTS — fill in both to switch on logging in (see supabase/setup.sql). Empty = no accounts. ===== */
+const SUPABASE_URL = "";           // Project URL, e.g. "https://abcd1234.supabase.co"
+const SUPABASE_KEY = "";           // the "anon public" key (safe on a website). NEVER the service_role key.
+const FIRST_ORDER_OFF = 0.10;      // 10% off a customer's first order; keep the same as 0.10 in setup.sql
+
 /* ===== MORE SETTINGS ===== */
 const WARRANTY_DAYS = 30;          // free reprint for breaks or print faults within this many days
 const INSTAGRAM_URL = "";          // e.g. "https://www.instagram.com/yourname" — an Instagram button appears when filled in
@@ -506,10 +540,10 @@ const SIZE_MM = {
   cat: [70], axolotl: [80], shark: [150], fcube: [40], illusion: [60], jeep: [86], whistle: [60], dragon: [190], trex: [180], gearshift: [50],
   planter: [80], hook: [70], keycat: [120], coaster: [100], headset: [250], phone: [110], pencil: [150], winder: [100], card: [95],
   cookie: [80], maze: [90], twisty: [70], chess: [250], feeder: [180], label: [100], vase: [150], fox: [50], pillars: [120], skull: [70], qskull: [90],
-  cattoy: [50], keys: [70],
+  cattoy: [50], keys: [70], alivetree: [150, true], dice: [180],
 };
 /* Prints that keep one size because they have to fit something */
-const FIXED_SIZE = ["alivetree", "xbox", "airtag", "gridfinity", "sdcard", "poobag", "toothbrush", "hphook", "cardbox", "egg", "spice", "dice"];
+const FIXED_SIZE = ["xbox", "airtag", "gridfinity", "sdcard", "poobag", "toothbrush", "hphook", "cardbox", "egg", "spice"];
 
 /* ===== DUTCH TEXT ===== */
 const CAT_NL = { All: "Alles", Toys: "Speelgoed", Home: "Huis", Desk: "Bureau", Kitchen: "Keuken", Games: "Spellen", Garden: "Tuin", Decor: "Decoratie", Gadgets: "Gadgets", Pets: "Huisdieren", Custom: "Op maat" };
@@ -592,7 +626,7 @@ const STR = {
     all: "All", priceOnReq: "Price on request", credit: "Design &amp; photo: {by} on MakerWorld",
     customSpec: "PLA · {size} · you describe it, we price it", print: "print",
     size: "Size", original: "original", sizeWord: "size",
-    sizeNote: "Max {max}%",
+    sizeNote: "Min {min}% · Max {max}%",
     sizeClamped: "{max}% is the biggest size that fits our printer", sizeTooSmall: "{min}% is the smallest size we can print", inCart: "{n} in cart",
     describe: "Describe your idea", chooseColors: "Choose colors", addToCart: "Add to cart",
     removeOne: "Remove one {name}", addOne: "Add one more {name}", multicolor: "Multicolor",
@@ -643,7 +677,7 @@ const STR = {
     all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp en foto: {by} op MakerWorld",
     customSpec: "PLA · {size} · jij beschrijft het, wij maken een prijs", print: "printtijd",
     size: "Formaat", original: "origineel", sizeWord: "formaat",
-    sizeNote: "Max. {max}%",
+    sizeNote: "Min. {min}% · Max. {max}%",
     sizeClamped: "{max}% is het grootste formaat dat op onze printer past", sizeTooSmall: "{min}% is het kleinste formaat dat we kunnen printen", inCart: "{n} in winkelwagen",
     describe: "Beschrijf je idee", chooseColors: "Kies kleuren", addToCart: "In winkelwagen",
     removeOne: "Eén {name} minder", addOne: "Nog één {name} erbij", multicolor: "Meerkleurig",
@@ -672,6 +706,76 @@ const STR = {
   },
 };
 
+/* ===== ACCOUNT TEXT ===== */
+Object.assign(STR.en, {
+  login: "Log in", account: "Account", loginTitle: "Log in", acctTitle: "Your account",
+  perk: "<b>{off} off your first order</b> when you're logged in.",
+  perkCart: "Log in to get <b>{off} off</b> your first order.",
+  perkReady: "Your first order gets <b>{off} off</b>.",
+  loginIntro: "Log in or make an account with just your email. We email you a login link, so there's no password to remember.",
+  email: "Email", sendLink: "Email me a login link", sending: "Sending…",
+  linkSent: "Check your email. We sent a login link to <b>{email}</b>. Open it on this device to log in. It can take a minute, and it may land in spam.",
+  linkErr: "That didn't work: {err}. Check the email address and try again in a minute.",
+  agree: "By logging in you agree to our <button type=\"button\" class=\"linkbtn\" data-privacy=\"1\">privacy policy</button>.",
+  loggedInAs: "Logged in as <b>{email}</b>",
+  yourDetails: "Your details", detailsNote: "We fill these in for you when you order.",
+  saveAddr: "Save my address for shipping", saveDetails: "Save details", saved: "Saved",
+  favTitle: "Favorites", favEmpty: "Tap ♥ on a print to save it here.", favOn: "Saved to favorites", favOff: "Removed from favorites",
+  favAdd: "Save {name} to favorites",
+  ordersTitle: "Your orders", ordersEmpty: "No orders yet.", loading: "Loading…",
+  logout: "Log out", del: "Delete account",
+  delSure: "This deletes your account, details, favorites and order history for good. Are you sure?",
+  delYes: "Yes, delete everything", delNo: "Keep my account", deleted: "Your account is deleted.",
+  adminBtn: "All orders (admin)", adminTitle: "All orders", backAcct: "← Back to account",
+  subtotal: "Subtotal", firstOff: "First order −{off}",
+  mOrderCode: "Order", mSubtotal: "Subtotal", mDiscount: "First-order discount ({off})",
+  saveErr: "Couldn't save the order to your account ({err}). You can still send it.",
+  err: "Something went wrong ({err}). Try again.",
+  status: { new: "Received", confirmed: "Confirmed", printing: "Printing", ready: "Ready", done: "Done", cancelled: "Cancelled" },
+  statusLabel: "Status", privacy: "Privacy", privacyTitle: "Privacy policy",
+  privacyBody: `<p>AnyThing 3D is a small 3D print shop. This explains what we keep when you make an account, and what we don't.</p>
+    <h3>Without an account</h3><p>We store nothing about you. Your cart and language choice stay in your own browser.</p>
+    <h3>With an account we store</h3><ul><li>your email address, to log you in</li><li>the name and phone number you save</li><li>your address, only if you tick "Save my address"</li><li>your orders: what you ordered, the price, pickup or shipping, your notes and the order status</li><li>your favorites</li></ul>
+    <h3>Why</h3><p>To log you in, fill in your details, show your orders and their status, and give the first-order discount. We never sell your data, show ads or track you.</p>
+    <h3>Where</h3><p>Accounts and orders are stored with Supabase, our database host, on servers in the EU. Login emails are sent by Supabase. Messages you send on WhatsApp or Messenger are handled by those apps under their own privacy rules.</p>
+    <h3>How long</h3><p>Until you delete your account. Go to Account → Delete account and everything is removed at once.</p>
+    <h3>Your rights</h3><p>You can see and change your details in your account and delete them at any time. For a copy of your data or any question, message us on WhatsApp or Messenger (see Contact us).</p>`,
+});
+Object.assign(STR.nl, {
+  login: "Inloggen", account: "Account", loginTitle: "Inloggen", acctTitle: "Je account",
+  perk: "<b>{off} korting op je eerste bestelling</b> als je bent ingelogd.",
+  perkCart: "Log in en krijg <b>{off} korting</b> op je eerste bestelling.",
+  perkReady: "Je eerste bestelling krijgt <b>{off} korting</b>.",
+  loginIntro: "Log in of maak een account aan met alleen je e-mailadres. We mailen je een inloglink, dus je hoeft geen wachtwoord te onthouden.",
+  email: "E-mailadres", sendLink: "Mail mij een inloglink", sending: "Versturen…",
+  linkSent: "Kijk in je mail. We hebben een inloglink gestuurd naar <b>{email}</b>. Open hem op dit apparaat om in te loggen. Het kan een minuutje duren, en hij kan in je spam terechtkomen.",
+  linkErr: "Dat lukte niet: {err}. Controleer het e-mailadres en probeer het over een minuut opnieuw.",
+  agree: "Door in te loggen ga je akkoord met ons <button type=\"button\" class=\"linkbtn\" data-privacy=\"1\">privacybeleid</button>.",
+  loggedInAs: "Ingelogd als <b>{email}</b>",
+  yourDetails: "Je gegevens", detailsNote: "Deze vullen we voor je in als je bestelt.",
+  saveAddr: "Mijn adres bewaren voor verzending", saveDetails: "Gegevens opslaan", saved: "Opgeslagen",
+  favTitle: "Favorieten", favEmpty: "Tik op ♥ bij een print om hem hier te bewaren.", favOn: "Bewaard bij je favorieten", favOff: "Verwijderd uit je favorieten",
+  favAdd: "{name} bewaren als favoriet",
+  ordersTitle: "Je bestellingen", ordersEmpty: "Nog geen bestellingen.", loading: "Laden…",
+  logout: "Uitloggen", del: "Account verwijderen",
+  delSure: "Hiermee verwijder je je account, gegevens, favorieten en bestelgeschiedenis voorgoed. Weet je het zeker?",
+  delYes: "Ja, alles verwijderen", delNo: "Account houden", deleted: "Je account is verwijderd.",
+  adminBtn: "Alle bestellingen (beheer)", adminTitle: "Alle bestellingen", backAcct: "← Terug naar je account",
+  subtotal: "Subtotaal", firstOff: "Eerste bestelling −{off}",
+  mOrderCode: "Bestelling", mSubtotal: "Subtotaal", mDiscount: "Korting eerste bestelling ({off})",
+  saveErr: "Opslaan in je account lukte niet ({err}). Je kunt de bestelling wel versturen.",
+  err: "Er ging iets mis ({err}). Probeer het opnieuw.",
+  status: { new: "Ontvangen", confirmed: "Bevestigd", printing: "Wordt geprint", ready: "Klaar", done: "Afgerond", cancelled: "Geannuleerd" },
+  statusLabel: "Status", privacy: "Privacy", privacyTitle: "Privacybeleid",
+  privacyBody: `<p>AnyThing 3D is een kleine 3D-printwinkel. Hier lees je wat we bewaren als je een account maakt, en wat niet.</p>
+    <h3>Zonder account</h3><p>We bewaren niets over jou. Je winkelwagen en taalkeuze blijven in je eigen browser.</p>
+    <h3>Met een account bewaren we</h3><ul><li>je e-mailadres, om je te laten inloggen</li><li>de naam en het telefoonnummer die je opslaat</li><li>je adres, alleen als je "Mijn adres bewaren" aanvinkt</li><li>je bestellingen: wat je bestelde, de prijs, ophalen of verzenden, je opmerkingen en de status</li><li>je favorieten</li></ul>
+    <h3>Waarom</h3><p>Om je te laten inloggen, je gegevens in te vullen, je bestellingen en hun status te tonen en je korting op je eerste bestelling te geven. We verkopen je gegevens nooit, tonen geen advertenties en volgen je niet.</p>
+    <h3>Waar</h3><p>Accounts en bestellingen staan bij Supabase, onze databasedienst, op servers in de EU. Inlogmails worden verstuurd door Supabase. Berichten die je via WhatsApp of Messenger stuurt, vallen onder de privacyregels van die apps.</p>
+    <h3>Hoe lang</h3><p>Tot je je account verwijdert. Ga naar Account → Account verwijderen en alles wordt in één keer gewist.</p>
+    <h3>Je rechten</h3><p>Je kunt je gegevens in je account bekijken, wijzigen en op elk moment verwijderen. Wil je een kopie van je gegevens of heb je een vraag? Stuur ons een bericht via WhatsApp of Messenger (zie Contact).</p>`,
+});
+
 const FAQ = [
   { en: ["How long does an order take?", "Usually 3 to 5 days after we confirm your order. Big or custom prints can take a little longer. We'll tell you in the chat."],
     nl: ["Hoe lang duurt een bestelling?", "Meestal 3 tot 5 dagen nadat we je bestelling bevestigen. Grote prints of prints op maat kunnen iets langer duren. Dat laten we je weten in de chat."] },
@@ -695,7 +799,7 @@ const FAQ = [
 let lang = "en";
 try { lang = localStorage.getItem("a3d-lang") || ((navigator.language || "").toLowerCase().startsWith("nl") ? "nl" : "en"); } catch (e) {}
 if (!STR[lang]) lang = "en";
-const vars = () => ({ multi: money(MULTICOLOR_EXTRA), days: WARRANTY_DAYS });
+const vars = () => ({ multi: money(MULTICOLOR_EXTRA), days: WARRANTY_DAYS, off: Math.round(FIRST_ORDER_OFF * 100) + "%" });
 const t = (k, v = {}) => { const s = STR[lang][k] ?? STR.en[k] ?? k; return typeof s === "string" ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] ?? vars()[x] ?? "") : s; };
 const nlOf = p => lang === "nl" ? (NL[p.id] || {}) : {};
 const pName = p => nlOf(p).name || p.name;
@@ -755,6 +859,7 @@ document.addEventListener("change", e => {
   if (r.type !== "radio" || !r.name.endsWith("Deliver")) return;
   const k = r.name.slice(0, -7), ship = r.value === "Shipping";
   $(`#${k}AddrWrap`).hidden = !ship; $(`#${k}Addr`).required = ship; $(`#${k}PickNote`).hidden = ship;
+  if (ship && k === "o" && !$("#oAddr").value && profile.address) $("#oAddr").value = profile.address;
   if (ship) $(`#${k}Addr`).focus();
 });
 
@@ -850,7 +955,7 @@ function visibleProducts() {
   return list;
 }
 
-const scaleNote = p => t("sizeNote", { max: Math.round(maxScaleOf(p) * 100) });
+const scaleNote = p => t("sizeNote", { min: Math.round(minScaleOf(p) * 100), max: Math.round(maxScaleOf(p) * 100) });
 /* While typing a size: update this card's price, specs and note without rebuilding the grid */
 function liveScale(p, s) {
   const card = document.querySelector(`.card[data-pid="${p.id}"]`); if (!card) return;
@@ -874,6 +979,7 @@ function renderGrid() {
     return `<article class="card${n ? " in" : ""}" data-pid="${p.id}">
       <div class="photo" style="--c:${COLORS[col]}">
         <span class="tag">${catName(p.cat)}</span>${n ? `<span class="in-cart">${t("inCart", { n })}</span>` : ""}
+        ${user && !p.custom ? `<button type="button" class="fav" data-fav="${p.id}" aria-pressed="${favs.has(p.id)}" aria-label="${t("favAdd", { name })}" title="${t("favTitle")}">♥</button>` : ""}
         ${p.image ? `<img src="${p.image}" alt="${name}" loading="lazy">` : `<div class="ph${p.custom ? " custom-ph" : ""}" aria-hidden="true"></div>`}
       </div>
       <div class="card-body">
@@ -986,18 +1092,23 @@ function renderDrawer() {
         <div>${pName(i.p)}<small>${lineLabel(i)} · ${money(linePrice(i))} ${t("each")}</small></div>
         <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="${t("decrease")}">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="${t("increase")}">+</button><button type="button" class="del" data-del="${k}" aria-label="${t("remove")} ${pName(i.p)}">${t("remove")}</button></div>
       </div>`).join("") +
-      `<div class="total"><span>${t("total")}</span><span class="price">${money(total)}</span></div>
-
-       <form class="order" id="orderForm">
-         <label for="oName">${t("yourName")}<input id="oName" required autocomplete="name"></label>
-         <label for="oContact">${t("phone")}<input id="oContact" required autocomplete="tel" placeholder="${t("phonePh")}"></label>
+      (firstOrder() ? `<div class="total"><span>${t("subtotal")}</span><span>${money(total)}</span></div>
+         <div class="total"><span>${t("firstOff")}</span><span>−${money(offOf(total))}</span></div>
+         <div class="total"><span>${t("total")}</span><span class="price">${money(total - offOf(total))}</span></div>`
+        : `<div class="total"><span>${t("total")}</span><span class="price">${money(total)}</span></div>`) +
+      (accountsOn() && !user ? `<p class="perk">${t("perkCart")} <button type="button" class="linkbtn" data-acct="1">${t("login")}</button></p>` : "") +
+      `<form class="order" id="orderForm">
+         <label for="oName">${t("yourName")}<input id="oName" required autocomplete="name" value="${esc(profile.name || "")}"></label>
+         <label for="oContact">${t("phone")}<input id="oContact" required autocomplete="tel" placeholder="${t("phonePh")}" value="${esc(profile.phone || "")}"></label>
          ${deliveryFields("o")}
          <label for="oNotes">${t("notes")}<textarea id="oNotes" rows="3"></textarea></label>
          <button class="primary" type="submit">${t("prepare")}</button>
        </form>`;
   } else {
-    const text = `${t("mOrder")}\n\n` + items.map(i => `${i.qty} × ${pName(i.p)} (${lineLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
-      `\n\n${t("mTotal")}: ${money(total)}\n${t("mName")}: ${view.name}\n${t("mContact")}: ${view.contact}\n${view.delivery}\n${t("mNotes")}: ${view.notes || "—"}`;
+    const o = view.order, off = o ? +o.discount : 0;
+    const text = `${t("mOrder")}${o ? ` (${t("mOrderCode")} ${o.code})` : ""}\n\n` + items.map(i => `${i.qty} × ${pName(i.p)} (${lineLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
+      (off ? `\n\n${t("mSubtotal")}: ${money(total)}\n${t("mDiscount")}: −${money(off)}\n${t("mTotal")}: ${money(total - off)}` : `\n\n${t("mTotal")}: ${money(total)}`) +
+      `\n${t("mName")}: ${view.name}\n${t("mContact")}: ${view.contact}\n${view.delivery}\n${t("mNotes")}: ${view.notes || "—"}`;
     body.innerHTML = `<p>${t("orderReady")}</p>
       <pre class="summary mono" id="summary"></pre>
       ${sendButtons(text)}
@@ -1015,11 +1126,15 @@ function openCart(o, mode, arg) {
   if (!o) return;
   if (mode === "custom") { $("#drawerTitle").textContent = t("customTitle"); renderCustom(); }
   else if (mode === "multi") { $("#drawerTitle").textContent = t("multiTitle"); renderMulti(arg); }
+  else if (mode === "account") { $("#drawerTitle").textContent = user ? t("acctTitle") : t("loginTitle"); renderAccount(); }
+  else if (mode === "admin") { $("#drawerTitle").textContent = t("adminTitle"); renderAdmin(); }
+  else if (mode === "privacy") { $("#drawerTitle").textContent = t("privacyTitle"); $("#drawerBody").innerHTML = `<div class="privacy">${t("privacyBody")}</div>`; }
   else { $("#drawerTitle").textContent = t("cartTitle"); view = "cart"; renderDrawer(); }
 }
 
 document.addEventListener("click", e => {
   if (e.target.closest("[data-open-custom]")) { e.preventDefault(); openCart(true, "custom"); return; }
+  if (acctClick(e)) return;
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.lang) setLang(b.dataset.lang);
   else if (b.dataset.custom) openCart(true, "custom");
@@ -1046,16 +1161,196 @@ document.addEventListener("submit", e => {
   addToCart(e.target.dataset.id, parts);
   openCart(false);
 });
-document.addEventListener("submit", e => {
+document.addEventListener("submit", async e => {
   if (e.target.id !== "orderForm") return;
   e.preventDefault();
-  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o") };
+  const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
+  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), order: await saveOrder() };
   renderDrawer();
 });
 $("#openCart").onclick = () => openCart(true);
 $("#closeCart").onclick = () => openCart(false);
 $("#scrim").onclick = () => openCart(false);
 document.addEventListener("keydown", e => { if (e.key === "Escape") openCart(false); });
+
+/* ===== ACCOUNTS: login by email link, saved details, favorites, orders, first-order discount (Supabase) ===== */
+let sb = null, user = null, profile = {}, myOrders = null, favs = new Set(), isAdmin = false, delAsk = false, linkState = null;
+const accountsOn = () => !!(SUPABASE_URL && SUPABASE_KEY);
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const offOf = total => Math.round(total * FIRST_ORDER_OFF * 100) / 100;
+/* The discount only shows once we know this account has no orders yet (cancelled ones don't count) */
+const firstOrder = () => !!user && Array.isArray(myOrders) && !myOrders.some(o => o.status !== "cancelled");
+const fmtDate = d => new Date(d).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+function initAccounts() {
+  if (!accountsOn()) return;
+  $("#acctBtn").hidden = false; $("#privacyLink").hidden = false;
+  const fromLink = /access_token|error_description/.test(location.hash);
+  const s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+  s.onload = () => {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sb.auth.onAuthStateChange((ev, session) => setTimeout(async () => {
+      await setUser(session?.user || null);
+      if (ev === "SIGNED_IN" && fromLink && user) { history.replaceState(null, "", location.pathname); openCart(true, "account"); }
+    }, 0));
+  };
+  document.head.appendChild(s);
+}
+
+async function setUser(u) {
+  if (u && user && u.id === user.id) { user = u; return; }   // token refresh: nothing changed
+  user = u; profile = {}; myOrders = null; favs = new Set(); isAdmin = false; delAsk = false;
+  if (u) {
+    const [p, o, f, a] = await Promise.all([
+      sb.from("profiles").select("*").eq("id", u.id).maybeSingle(),
+      sb.from("orders").select("*").eq("user_id", u.id).order("created_at", { ascending: false }),
+      sb.from("favorites").select("product_id").eq("user_id", u.id),
+      sb.rpc("is_admin"),
+    ]);
+    profile = p.data || {}; myOrders = o.data || []; favs = new Set((f.data || []).map(x => x.product_id)); isAdmin = a.data === true;
+  }
+  renderAcctBtn(); renderGrid();
+  if (drawerMode === "account" || drawerMode === "admin" || (drawerMode === "cart" && view === "cart")) openCart(true, drawerMode === "admin" && !isAdmin ? "account" : drawerMode);
+}
+
+function renderAcctBtn() {
+  const b = $("#acctBtn"); if (!b) return;
+  b.textContent = user ? t("account") : t("login");
+  b.setAttribute("aria-pressed", !!user);
+}
+
+const statusPill = st => `<span class="pill st-${st}">${t("status")[st] || st}</span>`;
+const orderCard = (o, admin) => `<div class="ord">
+    <div class="ord-head"><b class="mono">${esc(o.code || "")}</b><span class="note">${fmtDate(o.created_at)}</span>
+      ${admin ? `<select data-status="${o.id}" aria-label="${t("statusLabel")}">${Object.keys(t("status")).map(k => `<option value="${k}"${k === o.status ? " selected" : ""}>${t("status")[k]}</option>`).join("")}</select>` : statusPill(o.status)}</div>
+    <ul>${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} <span class="note">(${esc(i.label)})</span></li>`).join("")}</ul>
+    ${admin ? `<div class="note">${esc(o.delivery || "")}${o.notes ? ` · ${esc(o.notes)}` : ""}</div>` : ""}
+    ${+o.discount ? `<div class="note">${t("mDiscount")}: −${money(+o.discount)}</div>` : ""}
+    <div class="ord-sum"><span>${t("total")}</span><span>${money(+o.total)}</span></div>
+  </div>`;
+
+function renderAccount() {
+  const body = $("#drawerBody");
+  if (!sb) { body.innerHTML = `<p class="empty">${t("loading")}</p>`; return; }
+  if (!user) {
+    body.innerHTML = `<p class="perk">${t("perk")}</p>
+      <p>${t("loginIntro")}</p>
+      <form class="order" id="loginForm">
+        <label for="lEmail">${t("email")}<input type="email" id="lEmail" required autocomplete="email" value="${esc(linkState?.email || "")}"></label>
+        <button class="primary" type="submit">${t("sendLink")}</button>
+      </form>
+      ${linkState?.sent ? `<p class="perk" role="status">${t("linkSent", { email: esc(linkState.email) })}</p>` : ""}
+      ${linkState?.err ? `<p class="note" role="alert">${t("linkErr", { err: esc(linkState.err) })}</p>` : ""}
+      <p class="note">${t("agree")}</p>`;
+    return;
+  }
+  const favList = PRODUCTS.filter(p => favs.has(p.id));
+  body.innerHTML = `<p>${t("loggedInAs", { email: esc(user.email || "") })}</p>
+    ${firstOrder() ? `<p class="perk">${t("perkReady")}</p>` : ""}
+    <section class="acct-sec"><h3>${t("yourDetails")}</h3><p class="note">${t("detailsNote")}</p>
+      <form class="order" id="profileForm">
+        <label for="pName">${t("yourName")}<input id="pName" autocomplete="name" value="${esc(profile.name || "")}"></label>
+        <label for="pPhone">${t("phone")}<input id="pPhone" autocomplete="tel" placeholder="${t("phonePh")}" value="${esc(profile.phone || "")}"></label>
+        <label class="check" for="pSaveAddr"><input type="checkbox" id="pSaveAddr"${profile.save_address ? " checked" : ""}>${t("saveAddr")}</label>
+        <label for="pAddr" id="pAddrWrap"${profile.save_address ? "" : " hidden"}>${t("address")}<textarea id="pAddr" rows="3" autocomplete="street-address">${esc(profile.address || "")}</textarea></label>
+        <button class="primary" type="submit">${t("saveDetails")}</button>
+      </form>
+    </section>
+    <section class="acct-sec"><h3>${t("favTitle")}</h3>
+      ${favList.length ? `<ul class="fav-list">${favList.map(p => `<li><span>${pName(p)} <span class="note">${money(p.price)}</span></span><button type="button" class="chip" data-fav="${p.id}" aria-pressed="true" aria-label="${t("favOff")}: ${pName(p)}">♥</button></li>`).join("")}</ul>` : `<p class="note">${t("favEmpty")}</p>`}
+    </section>
+    <section class="acct-sec"><h3>${t("ordersTitle")}</h3>
+      ${myOrders === null ? `<p class="note">${t("loading")}</p>` : myOrders.length ? myOrders.map(o => orderCard(o, false)).join("") : `<p class="note">${t("ordersEmpty")}</p>`}
+    </section>
+    <section class="acct-sec">
+      <div class="row-btns">
+        ${isAdmin ? `<button type="button" class="chip" data-admin="1">${t("adminBtn")}</button>` : ""}
+        <button type="button" class="chip" data-logout="1">${t("logout")}</button>
+        <button type="button" class="chip danger" data-delacct="ask">${t("del")}</button>
+      </div>
+      ${delAsk ? `<p class="note" role="alert">${t("delSure")}</p>
+        <div class="row-btns"><button type="button" class="chip danger" data-delacct="yes">${t("delYes")}</button><button type="button" class="chip" data-delacct="no">${t("delNo")}</button></div>` : ""}
+    </section>`;
+}
+
+async function renderAdmin() {
+  const body = $("#drawerBody");
+  body.innerHTML = `<button type="button" class="chip" data-acct="1">${t("backAcct")}</button><p class="note">${t("loading")}</p>`;
+  const { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+  if (drawerMode !== "admin") return;
+  body.innerHTML = `<button type="button" class="chip" data-acct="1">${t("backAcct")}</button>` +
+    (error ? `<p class="note">${t("err", { err: esc(error.message) })}</p>` : data.length ? data.map(o => orderCard(o, true)).join("") : `<p class="note">${t("ordersEmpty")}</p>`);
+}
+
+/* Save the order to the account; the database adds the code and the first-order discount */
+async function saveOrder() {
+  if (!sb || !user) return null;
+  const items = cart.map(i => ({ ...i, p: PRODUCTS.find(p => p.id === i.id) })).filter(i => i.p)
+    .map(i => ({ id: i.id, name: pName(i.p), label: lineLabel(i), qty: i.qty, price: Math.round(linePrice(i) * 100) / 100 }));
+  const subtotal = Math.round(items.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
+  const { data, error } = await sb.from("orders").insert({ user_id: user.id, items, subtotal,
+    delivery: $("#oShip").checked ? "Shipping" : "Pickup", notes: $("#oNotes").value.trim() || null }).select().single();
+  if (error) { toast(t("saveErr", { err: esc(error.message) })); return null; }
+  myOrders = [data, ...(myOrders || [])];
+  if (!profile.name || !profile.phone) {   // remember name and phone for next time
+    profile = { ...profile, name: profile.name || $("#oName").value.trim(), phone: profile.phone || $("#oContact").value.trim() };
+    sb.from("profiles").upsert({ id: user.id, name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() });
+  }
+  return data;
+}
+
+/* Clicks for account buttons; returns true when handled */
+function acctClick(e) {
+  const b = e.target.closest("button, a"); if (!b) return false;
+  const run = async f => { try { await f(); } catch (err) { toast(t("err", { err: esc(err.message || err) })); } };
+  if (b.id === "acctBtn" || b.dataset.acct) { openCart(true, "account"); return true; }
+  if (b.dataset.privacy) { openCart(true, "privacy"); return true; }
+  if (b.dataset.admin) { openCart(true, "admin"); return true; }
+  if (b.dataset.logout) { run(async () => { await sb.auth.signOut(); linkState = null; }); return true; }
+  if (b.dataset.delacct) {
+    if (b.dataset.delacct === "ask") { delAsk = true; renderAccount(); }
+    else if (b.dataset.delacct === "no") { delAsk = false; renderAccount(); }
+    else run(async () => { const { error } = await sb.rpc("delete_my_account"); if (error) throw error; await sb.auth.signOut(); toast(t("deleted")); });
+    return true;
+  }
+  if (b.dataset.fav) {
+    const id = b.dataset.fav, on = !favs.has(id);
+    on ? favs.add(id) : favs.delete(id);
+    renderGrid(); if (drawerMode === "account") renderAccount(); toast(on ? t("favOn") : t("favOff"));
+    run(async () => { const { error } = on ? await sb.from("favorites").insert({ user_id: user.id, product_id: id })
+      : await sb.from("favorites").delete().eq("user_id", user.id).eq("product_id", id); if (error) throw error; });
+    return true;
+  }
+  return false;
+}
+
+document.addEventListener("submit", async e => {
+  if (e.target.id === "loginForm") {
+    e.preventDefault();
+    const email = $("#lEmail").value.trim(), btn = e.target.querySelector("button");
+    btn.disabled = true; btn.textContent = t("sending");
+    const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+    linkState = error ? { email, err: error.message } : { email, sent: true };
+    renderAccount();
+  } else if (e.target.id === "profileForm") {
+    e.preventDefault();
+    const keep = $("#pSaveAddr").checked;
+    const row = { id: user.id, name: $("#pName").value.trim(), phone: $("#pPhone").value.trim(), save_address: keep,
+      address: keep ? $("#pAddr").value.trim() : null, updated_at: new Date().toISOString() };
+    const { error } = await sb.from("profiles").upsert(row);
+    if (error) { toast(t("err", { err: esc(error.message) })); return; }
+    profile = row; toast(t("saved"));
+  }
+});
+document.addEventListener("change", async e => {
+  const r = e.target;
+  if (r.id === "pSaveAddr") { $("#pAddrWrap").hidden = !r.checked; if (r.checked) $("#pAddr").focus(); }
+  if (r.dataset.status) {
+    const { error } = await sb.from("orders").update({ status: r.value }).eq("id", r.dataset.status);
+    toast(error ? t("err", { err: esc(error.message) }) : t("saved"));
+  }
+});
 
 function renderContact() {
   $("#contactBtns").innerHTML =
@@ -1080,7 +1375,7 @@ function applyLang() {
   $("#closeCart").setAttribute("aria-label", t("ariaClose"));
   $("#drawer").setAttribute("aria-label", t("cart"));
   $(".lang").setAttribute("aria-label", t("ariaLang"));
-  renderFilters(); renderToolbar(); renderGrid(); renderContact(); renderFaq(); updateCount();
+  renderFilters(); renderToolbar(); renderGrid(); renderContact(); renderFaq(); updateCount(); renderAcctBtn();
   if (drawerMode) openCart(true, drawerMode === "cart" ? undefined : drawerMode, drawerArg);
 }
 function setLang(l) {
@@ -1092,6 +1387,7 @@ function setLang(l) {
 
 document.querySelectorAll("[data-fb]").forEach(a => { a.href = FACEBOOK_URL; });
 applyLang();
+initAccounts();
 printify(document.querySelector("header")); printify(document.querySelector(".hero")); printify(document.querySelector("#how")); printify(document.querySelector("#about")); printify(document.querySelector("#faq")); printify(document.querySelector("#contact")); printify(document.querySelector("footer")); document.querySelectorAll(".section-head, .gallery-note").forEach(el => printIO && (el.matches(PRINT_SEL) ? printIO.observe(el) : printify(el)));
 </script>
 
