@@ -240,6 +240,13 @@ form.order .check input { accent-color: var(--accent); margin: 0; }
 .ord select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .fav-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .fav-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.deliver .opts.pay-opts { grid-template-columns: 1fr; }
+.deliver .opts.pay-opts label { justify-content: flex-start; text-align: left; }
+.deliver .opts label:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+.pay-logos { font-size: .75rem; color: var(--ink-soft); font-weight: 400; }
+.pill.st-paid { background: #1F8A4C; color: #fff; border-color: #1F8A4C; }
+.ord .row-btns { margin-top: 4px; }
+.ord input.tot { width: 7em; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .photo .fav { position: absolute; right: 12px; bottom: 12px; z-index: 1; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); font-size: 1.125rem; line-height: 1; }
 .photo .fav[aria-pressed="true"] { color: #D6336C; border-color: #D6336C; }
 .privacy h3 { font-family: var(--f-display); font-weight: 700; font-size: .9375rem; margin-top: 6px; }
@@ -527,6 +534,7 @@ PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 /* ===== ACCOUNTS — fill in both to switch on logging in (see supabase/setup.sql). Empty = no accounts. ===== */
 const SUPABASE_URL = "";           // Project URL, e.g. "https://abcd1234.supabase.co"
 const SUPABASE_KEY = "";           // the "anon public" key (safe on a website). NEVER the service_role key.
+const ONLINE_PAY = false;         // true once Stripe is connected: customers can pay on the site after you confirm
 const FIRST_ORDER_OFF = 0.10;      // 10% off a customer's first order; keep the same as 0.10 in setup.sql
 
 /* ===== MORE SETTINGS ===== */
@@ -732,12 +740,22 @@ Object.assign(STR.en, {
   saveErr: "Couldn't save the order to your account ({err}). You can still send it.",
   err: "Something went wrong ({err}). Try again.",
   status: { new: "Received", confirmed: "Confirmed", printing: "Printing", ready: "Ready", done: "Done", cancelled: "Cancelled" },
+  payQ: "How do you want to pay?", pay_online: "Pay online on this site", pay_tikkie: "Tikkie / payment request", pay_cash: "Cash at pickup",
+  payMethodsShort: "iDEAL (QR code), Google Pay, Apple Pay, card, PayPal, Klarna and more",
+  payWhen: "You pay after we confirm your order and the final price.",
+  payLogin: "To pay online, log in first.",
+  payNow: "Pay {amount} now", payGoing: "Opening payment…",
+  payMethods: "iDEAL (scan the QR code with your banking app), Google Pay, Apple Pay, card, PayPal, Klarna and more.",
+  payAfter: "You can pay here as soon as we confirm your order.",
+  paid: "Paid", markPaid: "Mark as paid", copyPay: "Copy payment link", copied: "Payment link copied. Send it in the chat.",
+  saveTotal: "Save price", mPay: "Payment",
+  thanksPaid: "Thank you! We received your payment for {code}.",
   statusLabel: "Status", privacy: "Privacy", privacyTitle: "Privacy policy",
   privacyBody: `<p>AnyThing 3D is a small 3D print shop. This explains what we keep when you make an account, and what we don't.</p>
     <h3>Without an account</h3><p>We store nothing about you. Your cart and language choice stay in your own browser.</p>
-    <h3>With an account we store</h3><ul><li>your email address, to log you in</li><li>the name and phone number you save</li><li>your address, only if you tick "Save my address"</li><li>your orders: what you ordered, the price, pickup or shipping, your notes and the order status</li><li>your favorites</li></ul>
+    <h3>With an account we store</h3><ul><li>your email address, to log you in</li><li>the name and phone number you save</li><li>your address, only if you tick "Save my address"</li><li>your orders: what you ordered, the price, pickup or shipping, how you pay, whether it's paid, your notes and the order status</li><li>your favorites</li></ul>
     <h3>Why</h3><p>To log you in, fill in your details, show your orders and their status, and give the first-order discount. We never sell your data, show ads or track you.</p>
-    <h3>Where</h3><p>Accounts and orders are stored with Supabase, our database host, on servers in the EU. Login emails are sent by Supabase. Messages you send on WhatsApp or Messenger are handled by those apps under their own privacy rules.</p>
+    <h3>Where</h3><p>Accounts and orders are stored with Supabase, our database host, on servers in the EU. Login emails are sent by Supabase. Online payments are handled by Stripe; we never see your card or bank details. Messages you send on WhatsApp or Messenger are handled by those apps under their own privacy rules.</p>
     <h3>How long</h3><p>Until you delete your account. Go to Account → Delete account and everything is removed at once.</p>
     <h3>Your rights</h3><p>You can see and change your details in your account and delete them at any time. For a copy of your data or any question, message us on WhatsApp or Messenger (see Contact us).</p>`,
 });
@@ -766,12 +784,22 @@ Object.assign(STR.nl, {
   saveErr: "Opslaan in je account lukte niet ({err}). Je kunt de bestelling wel versturen.",
   err: "Er ging iets mis ({err}). Probeer het opnieuw.",
   status: { new: "Ontvangen", confirmed: "Bevestigd", printing: "Wordt geprint", ready: "Klaar", done: "Afgerond", cancelled: "Geannuleerd" },
+  payQ: "Hoe wil je betalen?", pay_online: "Online betalen op deze site", pay_tikkie: "Tikkie / betaalverzoek", pay_cash: "Contant bij ophalen",
+  payMethodsShort: "iDEAL (QR-code), Google Pay, Apple Pay, creditcard, PayPal, Klarna en meer",
+  payWhen: "Je betaalt nadat we je bestelling en de definitieve prijs hebben bevestigd.",
+  payLogin: "Log eerst in om online te betalen.",
+  payNow: "Nu {amount} betalen", payGoing: "Betaling openen…",
+  payMethods: "iDEAL (scan de QR-code met je bank-app), Google Pay, Apple Pay, creditcard, PayPal, Klarna en meer.",
+  payAfter: "Je kunt hier betalen zodra we je bestelling hebben bevestigd.",
+  paid: "Betaald", markPaid: "Markeren als betaald", copyPay: "Betaallink kopiëren", copied: "Betaallink gekopieerd. Stuur hem in de chat.",
+  saveTotal: "Prijs opslaan", mPay: "Betaling",
+  thanksPaid: "Bedankt! We hebben je betaling voor {code} ontvangen.",
   statusLabel: "Status", privacy: "Privacy", privacyTitle: "Privacybeleid",
   privacyBody: `<p>AnyThing 3D is een kleine 3D-printwinkel. Hier lees je wat we bewaren als je een account maakt, en wat niet.</p>
     <h3>Zonder account</h3><p>We bewaren niets over jou. Je winkelwagen en taalkeuze blijven in je eigen browser.</p>
-    <h3>Met een account bewaren we</h3><ul><li>je e-mailadres, om je te laten inloggen</li><li>de naam en het telefoonnummer die je opslaat</li><li>je adres, alleen als je "Mijn adres bewaren" aanvinkt</li><li>je bestellingen: wat je bestelde, de prijs, ophalen of verzenden, je opmerkingen en de status</li><li>je favorieten</li></ul>
+    <h3>Met een account bewaren we</h3><ul><li>je e-mailadres, om je te laten inloggen</li><li>de naam en het telefoonnummer die je opslaat</li><li>je adres, alleen als je "Mijn adres bewaren" aanvinkt</li><li>je bestellingen: wat je bestelde, de prijs, ophalen of verzenden, hoe je betaalt, of het betaald is, je opmerkingen en de status</li><li>je favorieten</li></ul>
     <h3>Waarom</h3><p>Om je te laten inloggen, je gegevens in te vullen, je bestellingen en hun status te tonen en je korting op je eerste bestelling te geven. We verkopen je gegevens nooit, tonen geen advertenties en volgen je niet.</p>
-    <h3>Waar</h3><p>Accounts en bestellingen staan bij Supabase, onze databasedienst, op servers in de EU. Inlogmails worden verstuurd door Supabase. Berichten die je via WhatsApp of Messenger stuurt, vallen onder de privacyregels van die apps.</p>
+    <h3>Waar</h3><p>Accounts en bestellingen staan bij Supabase, onze databasedienst, op servers in de EU. Inlogmails worden verstuurd door Supabase. Online betalingen lopen via Stripe; wij zien je kaart- of bankgegevens nooit. Berichten die je via WhatsApp of Messenger stuurt, vallen onder de privacyregels van die apps.</p>
     <h3>Hoe lang</h3><p>Tot je je account verwijdert. Ga naar Account → Account verwijderen en alles wordt in één keer gewist.</p>
     <h3>Je rechten</h3><p>Je kunt je gegevens in je account bekijken, wijzigen en op elk moment verwijderen. Wil je een kopie van je gegevens of heb je een vraag? Stuur ons een bericht via WhatsApp of Messenger (zie Contact).</p>`,
 });
@@ -779,8 +807,12 @@ Object.assign(STR.nl, {
 const FAQ = [
   { en: ["How long does an order take?", "Usually 3 to 5 days after we confirm your order. Big or custom prints can take a little longer. We'll tell you in the chat."],
     nl: ["Hoe lang duurt een bestelling?", "Meestal 3 tot 5 dagen nadat we je bestelling bevestigen. Grote prints of prints op maat kunnen iets langer duren. Dat laten we je weten in de chat."] },
-  { en: ["How do I pay?", "With Tikkie or a bank transfer, or in cash when you pick up. We send the payment details in the chat after we confirm your order."],
-    nl: ["Hoe betaal ik?", "Met Tikkie of een bankoverschrijving, of contant bij het ophalen. We sturen de betaalgegevens in de chat nadat we je bestelling bevestigen."] },
+  { en: ["How do I pay?", ONLINE_PAY
+      ? "You choose when you order. Pay online on this site with iDEAL (scan the QR code with your banking app), Google Pay, Apple Pay, a card, PayPal, Klarna and more. Or pick Tikkie, and we send you a payment request in the chat. Or pay in cash when you pick up. You pay after we confirm your order."
+      : "With Tikkie or a bank transfer, or in cash when you pick up. We send the payment details in the chat after we confirm your order."],
+    nl: ["Hoe betaal ik?", ONLINE_PAY
+      ? "Dat kies je bij je bestelling. Betaal online op deze site met iDEAL (scan de QR-code met je bank-app), Google Pay, Apple Pay, een creditcard, PayPal, Klarna en meer. Of kies Tikkie, dan sturen we je een betaalverzoek in de chat. Of betaal contant bij het ophalen. Je betaalt nadat we je bestelling hebben bevestigd."
+      : "Met Tikkie of een bankoverschrijving, of contant bij het ophalen. We sturen de betaalgegevens in de chat nadat we je bestelling bevestigen."] },
   { en: ["Is there a warranty?", "Yes, {days} days. If a print breaks during normal use or has a printing fault within {days} days, we reprint it for free. After {days} days, a reprint costs the normal price. Damage from drops, heat or misuse isn't covered."],
     nl: ["Is er garantie?", "Ja, {days} dagen. Breekt een print bij normaal gebruik of zit er een printfout in binnen {days} dagen, dan printen we hem gratis opnieuw. Na {days} dagen betaal je voor een nieuwe print de normale prijs. Schade door vallen, hitte of verkeerd gebruik valt er niet onder."] },
   { en: ["Can I get a different size?", "Yes. Type any size on the product card, from the smallest size we can print up to the biggest that fits our 256 mm printer. The price updates by itself: bigger sizes cost more because they use more filament and print time. If you type too much or too little, it jumps to the biggest or smallest size we can print. Some prints keep one size because they have to fit something, like an AirTag or a controller."],
@@ -860,6 +892,7 @@ document.addEventListener("change", e => {
   const k = r.name.slice(0, -7), ship = r.value === "Shipping";
   $(`#${k}AddrWrap`).hidden = !ship; $(`#${k}Addr`).required = ship; $(`#${k}PickNote`).hidden = ship;
   if (ship && k === "o" && !$("#oAddr").value && profile.address) $("#oAddr").value = profile.address;
+  if (k === "o" && $("#payCash")) { $("#payCash").disabled = ship; if (ship && $("#payCash").checked) $("#payTikkie").checked = true; }
   if (ship) $(`#${k}Addr`).focus();
 });
 
@@ -1101,6 +1134,7 @@ function renderDrawer() {
          <label for="oName">${t("yourName")}<input id="oName" required autocomplete="name" value="${esc(profile.name || "")}"></label>
          <label for="oContact">${t("phone")}<input id="oContact" required autocomplete="tel" placeholder="${t("phonePh")}" value="${esc(profile.phone || "")}"></label>
          ${deliveryFields("o")}
+         ${payFields()}
          <label for="oNotes">${t("notes")}<textarea id="oNotes" rows="3"></textarea></label>
          <button class="primary" type="submit">${t("prepare")}</button>
        </form>`;
@@ -1108,6 +1142,7 @@ function renderDrawer() {
     const o = view.order, off = o ? +o.discount : 0;
     const text = `${t("mOrder")}${o ? ` (${t("mOrderCode")} ${o.code})` : ""}\n\n` + items.map(i => `${i.qty} × ${pName(i.p)} (${lineLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
       (off ? `\n\n${t("mSubtotal")}: ${money(total)}\n${t("mDiscount")}: −${money(off)}\n${t("mTotal")}: ${money(total - off)}` : `\n\n${t("mTotal")}: ${money(total)}`) +
+      `\n${t("mPay")}: ${t("pay_" + view.payment)}` +
       `\n${t("mName")}: ${view.name}\n${t("mContact")}: ${view.contact}\n${view.delivery}\n${t("mNotes")}: ${view.notes || "—"}`;
     body.innerHTML = `<p>${t("orderReady")}</p>
       <pre class="summary mono" id="summary"></pre>
@@ -1165,7 +1200,7 @@ document.addEventListener("submit", async e => {
   if (e.target.id !== "orderForm") return;
   e.preventDefault();
   const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
-  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), order: await saveOrder() };
+  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), payment: payChoice(), order: await saveOrder() };
   renderDrawer();
 });
 $("#openCart").onclick = () => openCart(true);
@@ -1193,9 +1228,22 @@ function initAccounts() {
     sb.auth.onAuthStateChange((ev, session) => setTimeout(async () => {
       await setUser(session?.user || null);
       if (ev === "SIGNED_IN" && fromLink && user) { history.replaceState(null, "", location.pathname); openCart(true, "account"); }
+      if (ev === "INITIAL_SESSION") handleHash();
     }, 0));
   };
   document.head.appendChild(s);
+}
+
+/* Links like anything3d.nl/#pay/A3D-1001 (payment link you send) and #paid/A3D-1001 (back from Stripe) */
+function handleHash() {
+  const m = location.hash.match(/^#(account|pay|paid)(?:\/([\w-]+))?$/); if (!m) return;
+  history.replaceState(null, "", location.pathname);
+  openCart(true, "account");
+  if (m[1] === "paid") {
+    toast(t("thanksPaid", { code: esc(m[2] || "") }));
+    // Stripe tells the database a moment later; then show the order as paid
+    setTimeout(async () => { if (!user) return; const { data } = await sb.from("orders").select("*").eq("user_id", user.id).order("created_at", { ascending: false }); if (data) { myOrders = data; if (drawerMode === "account") renderAccount(); } }, 4000);
+  }
 }
 
 async function setUser(u) {
@@ -1227,8 +1275,18 @@ const orderCard = (o, admin) => `<div class="ord">
     <ul>${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} <span class="note">(${esc(i.label)})</span></li>`).join("")}</ul>
     ${admin ? `<div class="note">${esc(o.delivery || "")}${o.notes ? ` · ${esc(o.notes)}` : ""}</div>` : ""}
     ${+o.discount ? `<div class="note">${t("mDiscount")}: −${money(+o.discount)}</div>` : ""}
-    <div class="ord-sum"><span>${t("total")}</span><span>${money(+o.total)}</span></div>
+    <div class="ord-sum"><span>${t("total")}</span>${admin && !o.paid_at ? `<span><input class="tot" type="number" step="0.01" min="0" id="tot-${o.id}" value="${(+o.total).toFixed(2)}" aria-label="${t("total")}"> <button type="button" class="chip" data-settotal="${o.id}">${t("saveTotal")}</button></span>` : `<span>${money(+o.total)}</span>`}</div>
+    <div class="ord-head"><span class="note">${t("pay_" + (o.payment || "tikkie"))}</span>${o.paid_at ? `<span class="pill st-paid">${t("paid")}</span>` : ""}</div>
+    ${payActions(o, admin)}
   </div>`;
+const canPay = o => ONLINE_PAY && o.payment === "online" && !o.paid_at && ["confirmed", "printing", "ready"].includes(o.status);
+function payActions(o, admin) {
+  if (o.paid_at || o.status === "cancelled") return "";
+  if (admin) return `<div class="row-btns">${canPay(o) ? `<button type="button" class="chip" data-copypay="${esc(o.code)}">${t("copyPay")}</button>` : ""}<button type="button" class="chip" data-markpaid="${o.id}">${t("markPaid")}</button></div>`;
+  if (canPay(o)) return `<button type="button" class="primary" data-pay="${o.id}">${t("payNow", { amount: money(+o.total) })}</button><p class="note">${t("payMethods")}</p>`;
+  if (ONLINE_PAY && o.payment === "online" && o.status === "new") return `<p class="note">${t("payAfter")}</p>`;
+  return "";
+}
 
 function renderAccount() {
   const body = $("#drawerBody");
@@ -1290,14 +1348,38 @@ async function saveOrder() {
     .map(i => ({ id: i.id, name: pName(i.p), label: lineLabel(i), qty: i.qty, price: Math.round(linePrice(i) * 100) / 100 }));
   const subtotal = Math.round(items.reduce((s, i) => s + i.price * i.qty, 0) * 100) / 100;
   const { data, error } = await sb.from("orders").insert({ user_id: user.id, items, subtotal,
-    delivery: $("#oShip").checked ? "Shipping" : "Pickup", notes: $("#oNotes").value.trim() || null }).select().single();
+    delivery: $("#oShip").checked ? "Shipping" : "Pickup", payment: payChoice(), notes: $("#oNotes").value.trim() || null }).select().single();
   if (error) { toast(t("saveErr", { err: esc(error.message) })); return null; }
   myOrders = [data, ...(myOrders || [])];
   if (!profile.name || !profile.phone) {   // remember name and phone for next time
     profile = { ...profile, name: profile.name || $("#oName").value.trim(), phone: profile.phone || $("#oContact").value.trim() };
-    sb.from("profiles").upsert({ id: user.id, name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() });
+    sb.from("profiles").upsert({ id: user.id, name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() }).then(() => {});   // queries only run once awaited
   }
   return data;
+}
+
+/* How the customer pays. Online needs an account, because the payment is linked to the order. */
+const payOn = () => ONLINE_PAY && accountsOn();
+const payChoice = () => document.querySelector('input[name="oPay"]:checked')?.value || "tikkie";
+function payFields() {
+  const opt = (v, id, extra = "") => `<label for="${id}"><input type="radio" name="oPay" id="${id}" value="${v}"${extra}><span>${t("pay_" + v)}${v === "online" ? `<br><span class="pay-logos">${t("payMethodsShort")}</span>` : ""}</span></label>`;
+  return `<fieldset class="deliver">
+    <legend>${t("payQ")}</legend>
+    <div class="opts pay-opts">
+      ${payOn() ? opt("online", "payOnline", user ? " checked" : " disabled") : ""}
+      ${opt("tikkie", "payTikkie", payOn() && user ? "" : " checked")}
+      ${opt("cash", "payCash")}
+    </div>
+    ${payOn() && !user ? `<p class="note">${t("payLogin")} <button type="button" class="linkbtn" data-acct="1">${t("login")}</button></p>` : `<p class="note">${t("payWhen")}</p>`}
+  </fieldset>`;
+}
+async function startPay(id, btn) {
+  btn.disabled = true; btn.textContent = t("payGoing");
+  const { data, error } = await sb.functions.invoke("pay", { body: { order_id: +id, lang } });
+  let msg = data?.error;
+  if (error) { try { msg = (await error.context.json()).error; } catch (e) { msg = error.message; } }
+  if (data?.url && !msg) { location.href = data.url; return; }
+  toast(t("err", { err: esc(msg || "?") })); btn.disabled = false; renderAccount();
 }
 
 /* Clicks for account buttons; returns true when handled */
@@ -1307,6 +1389,14 @@ function acctClick(e) {
   if (b.id === "acctBtn" || b.dataset.acct) { openCart(true, "account"); return true; }
   if (b.dataset.privacy) { openCart(true, "privacy"); return true; }
   if (b.dataset.admin) { openCart(true, "admin"); return true; }
+  if (b.dataset.pay) { startPay(b.dataset.pay, b); return true; }
+  if (b.dataset.copypay) { navigator.clipboard?.writeText(`${location.origin}/#pay/${b.dataset.copypay}`).then(() => toast(t("copied")), () => toast(`${location.origin}/#pay/${b.dataset.copypay}`)); return true; }
+  if (b.dataset.markpaid || b.dataset.settotal) {
+    const id = b.dataset.markpaid || b.dataset.settotal;
+    const patch = b.dataset.markpaid ? { paid_at: new Date().toISOString() } : { total: Math.max(0, Math.round(parseFloat($(`#tot-${id}`).value) * 100) / 100) };
+    run(async () => { const { error } = await sb.from("orders").update(patch).eq("id", id); if (error) throw error; toast(t("saved")); renderAdmin(); });
+    return true;
+  }
   if (b.dataset.logout) { run(async () => { await sb.auth.signOut(); linkState = null; }); return true; }
   if (b.dataset.delacct) {
     if (b.dataset.delacct === "ask") { delAsk = true; renderAccount(); }
