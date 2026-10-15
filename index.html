@@ -499,7 +499,7 @@ PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 const WARRANTY_DAYS = 30;          // free reprint for breaks or print faults within this many days
 const INSTAGRAM_URL = "";          // e.g. "https://www.instagram.com/yourname" — an Instagram button appears when filled in
 const BED_MM = 256;                // Bambu Lab A1 build volume: 256 × 256 × 256 mm
-const MIN_SCALE = 0.5;             // smallest size customers can type (50%)
+const MIN_MM = 20;                 // smallest print we make: largest side at least 20 mm, so details still print
 /* Largest side of each print at 100%, in mm. [mm, true] = measured from the MakerWorld model file; others are estimates. */
 const SIZE_MM = {
   katana: [177, true], fidget: [48, true], octopus: [105, true], snake: [62, true], spinner: [67, true],
@@ -592,8 +592,8 @@ const STR = {
     all: "All", priceOnReq: "Price on request", credit: "Design &amp; photo: {by} on MakerWorld",
     customSpec: "PLA · {size} · you describe it, we price it", print: "print",
     size: "Size", original: "original", sizeWord: "size",
-    sizeNote: "Max {max}% · fits 256 × 256 mm",
-    sizeClamped: "{max}% is the biggest size that fits our printer", inCart: "{n} in cart",
+    sizeNote: "Max {max}%",
+    sizeClamped: "{max}% is the biggest size that fits our printer", sizeTooSmall: "{min}% is the smallest size we can print", inCart: "{n} in cart",
     describe: "Describe your idea", chooseColors: "Choose colors", addToCart: "Add to cart",
     removeOne: "Remove one {name}", addOne: "Add one more {name}", multicolor: "Multicolor",
     added: "Added {name} ({color}) · Cart total {total}",
@@ -643,8 +643,8 @@ const STR = {
     all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp en foto: {by} op MakerWorld",
     customSpec: "PLA · {size} · jij beschrijft het, wij maken een prijs", print: "printtijd",
     size: "Formaat", original: "origineel", sizeWord: "formaat",
-    sizeNote: "Max. {max}% · past op 256 × 256 mm",
-    sizeClamped: "{max}% is het grootste formaat dat op onze printer past", inCart: "{n} in winkelwagen",
+    sizeNote: "Max. {max}%",
+    sizeClamped: "{max}% is het grootste formaat dat op onze printer past", sizeTooSmall: "{min}% is het kleinste formaat dat we kunnen printen", inCart: "{n} in winkelwagen",
     describe: "Beschrijf je idee", chooseColors: "Kies kleuren", addToCart: "In winkelwagen",
     removeOne: "Eén {name} minder", addOne: "Nog één {name} erbij", multicolor: "Meerkleurig",
     added: "{name} ({color}) toegevoegd · Totaal {total}",
@@ -679,8 +679,8 @@ const FAQ = [
     nl: ["Hoe betaal ik?", "Met Tikkie of een bankoverschrijving, of contant bij het ophalen. We sturen de betaalgegevens in de chat nadat we je bestelling bevestigen."] },
   { en: ["Is there a warranty?", "Yes, {days} days. If a print breaks during normal use or has a printing fault within {days} days, we reprint it for free. After {days} days, a reprint costs the normal price. Damage from drops, heat or misuse isn't covered."],
     nl: ["Is er garantie?", "Ja, {days} dagen. Breekt een print bij normaal gebruik of zit er een printfout in binnen {days} dagen, dan printen we hem gratis opnieuw. Na {days} dagen betaal je voor een nieuwe print de normale prijs. Schade door vallen, hitte of verkeerd gebruik valt er niet onder."] },
-  { en: ["Can I get a different size?", "Yes. Type any size on the product card, from 50% up to the biggest that fits our 256 mm printer. The price updates by itself: bigger sizes cost more because they use more filament and print time. If you type too much, it jumps to the biggest size that fits. Some prints keep one size because they have to fit something, like an AirTag or a controller."],
-    nl: ["Kan ik een ander formaat krijgen?", "Ja. Typ op de productkaart elk formaat, van 50% tot het grootste dat op onze printer van 256 mm past. De prijs rekent zichzelf uit: grotere formaten kosten meer, omdat er meer filament en printtijd in gaat. Typ je te veel, dan springt het naar het grootste formaat dat past. Sommige prints hebben één vast formaat, omdat ze ergens op moeten passen, zoals een AirTag of een controller."] },
+  { en: ["Can I get a different size?", "Yes. Type any size on the product card, from the smallest size we can print up to the biggest that fits our 256 mm printer. The price updates by itself: bigger sizes cost more because they use more filament and print time. If you type too much or too little, it jumps to the biggest or smallest size we can print. Some prints keep one size because they have to fit something, like an AirTag or a controller."],
+    nl: ["Kan ik een ander formaat krijgen?", "Ja. Typ op de productkaart elk formaat, van het kleinste formaat dat we kunnen printen tot het grootste dat op onze printer van 256 mm past. De prijs rekent zichzelf uit: grotere formaten kosten meer, omdat er meer filament en printtijd in gaat. Typ je te veel of te weinig, dan springt het naar het grootste of kleinste formaat dat we kunnen printen. Sommige prints hebben één vast formaat, omdat ze ergens op moeten passen, zoals een AirTag of een controller."] },
   { en: ["Can I have more than one color?", "Yes. Tap the rainbow dot on a print, pick up to 4 colors and write where each one goes. Multicolor costs {multi} extra."],
     nl: ["Kan ik meer dan één kleur kiezen?", "Ja. Tik op het regenboogbolletje bij een print, kies tot 4 kleuren en schrijf waar elke kleur komt. Meerkleurig kost {multi} extra."] },
   { en: ["Can PLA go in the dishwasher, the sun or a hot car?", "No. PLA gets soft from about 55 °C. Wash it by hand in lukewarm water, and keep it out of hot cars and strong summer sun."],
@@ -717,7 +717,9 @@ let filter = "All", sortBy = "featured", search = "";
 const canScale = p => !p.custom && !FIXED_SIZE.includes(p.id) && !!SIZE_MM[p.id];
 /* Biggest size that still fits the printer, rounded down to a whole percent */
 const maxScaleOf = p => canScale(p) ? Math.max(1, Math.floor(BED_MM / SIZE_MM[p.id][0] * 100) / 100) : 1;
-const clampScale = (p, s) => Math.min(maxScaleOf(p), Math.max(MIN_SCALE, Math.round(s * 100) / 100));
+/* Smallest size that still prints well, rounded up to a whole percent */
+const minScaleOf = p => canScale(p) ? Math.min(1, Math.max(0.01, Math.ceil(MIN_MM / SIZE_MM[p.id][0] * 100) / 100)) : 1;
+const clampScale = (p, s) => Math.min(maxScaleOf(p), Math.max(minScaleOf(p), Math.round(s * 100) / 100));
 const scaled = (p, s) => s === 1 ? p : { ...p, grams: p.grams * s ** 3, hours: p.hours * s ** 2.5, market: p.market ? p.market * s ** 2 : undefined };
 const priceAt = (p, s = 1) => s === 1 ? p.price : priceOf(scaled(p, s));
 const pct = s => Math.round(s * 100) + "%";
@@ -797,12 +799,13 @@ function renderToolbar() {
   $("#sort").innerHTML = [["featured", t("featured")], ["price-asc", t("priceAsc")], ["price-desc", t("priceDesc")]]
     .map(([v, l]) => `<option value="${v}"${v === sortBy ? " selected" : ""}>${l}</option>`).join("");
 }
-/* Typed sizes: any whole percent from 50% up to the biggest that fits the printer */
+/* Typed sizes: any whole percent from the smallest printable size up to the biggest that fits the printer */
 function commitScale(r) {
   const p = PRODUCTS.find(x => x.id === r.dataset.scale);
   const v = parseFloat(r.value);
   const s = clampScale(p, isFinite(v) ? v / 100 : 1);
   if (isFinite(v) && v / 100 > maxScaleOf(p)) toast(t("sizeClamped", { max: Math.round(maxScaleOf(p) * 100) }));
+  else if (isFinite(v) && v / 100 < minScaleOf(p)) toast(t("sizeTooSmall", { min: Math.round(minScaleOf(p) * 100) }));
   pickedScale[p.id] = s;
   renderGrid();
   $(`#sc-${p.id}`)?.focus();
@@ -813,7 +816,7 @@ document.addEventListener("input", e => {
   if (!isFinite(v)) return;
   if (v / 100 > maxScaleOf(p)) { r.value = Math.round(maxScaleOf(p) * 100); toast(t("sizeClamped", { max: r.value })); }
   const s = parseFloat(r.value) / 100;
-  if (s >= MIN_SCALE) { pickedScale[p.id] = Math.round(s * 100) / 100; liveScale(p, pickedScale[p.id]); }
+  if (s >= minScaleOf(p)) { pickedScale[p.id] = Math.round(s * 100) / 100; liveScale(p, pickedScale[p.id]); }
 });
 document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("input[data-scale]")) { e.preventDefault(); commitScale(e.target); } });
 $("#search").addEventListener("input", e => { search = e.target.value; renderGrid(); });
@@ -885,7 +888,7 @@ function renderGrid() {
         </div>
         ${canScale(p) ? `<div class="scale-pick">
           <label for="sc-${p.id}">${t("size")}</label>
-          <span class="scale-in"><input type="number" id="sc-${p.id}" data-scale="${p.id}" min="${MIN_SCALE * 100}" max="${Math.round(maxScaleOf(p) * 100)}" step="1" inputmode="numeric" value="${Math.round(sc * 100)}"><span>%</span></span>
+          <span class="scale-in"><input type="number" id="sc-${p.id}" data-scale="${p.id}" min="${Math.round(minScaleOf(p) * 100)}" max="${Math.round(maxScaleOf(p) * 100)}" step="1" inputmode="numeric" value="${Math.round(sc * 100)}"><span>%</span></span>
         </div>
         <div class="scale-note" data-scale-note="${p.id}">${scaleNote(p, sc)}</div>` : ""}
         ${p.custom ? `<button type="button" class="add custom-btn" data-custom="1">${t("describe")}</button>`
