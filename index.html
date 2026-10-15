@@ -176,6 +176,13 @@ a.primary.ms { background-color: #0866FF; color: #FFFFFF; }
 .step h3 { font-family: var(--f-display); font-weight: 500; font-size: 1.0625rem; }
 .step p { margin: 0; color: var(--ink-soft); max-width: 30ch; }
 
+.contact { padding-block: 0 clamp(56px, 8vw, 96px); }
+.contact-lead { margin: 18px 0 20px; color: var(--ink-soft); max-width: 60ch; }
+.contact-btns { display: flex; flex-wrap: wrap; gap: 12px; }
+.contact-btns a.primary { display: inline-flex; flex-direction: column; gap: 2px; min-width: min(100%, 220px); padding: 14px 20px; text-decoration: none; }
+.contact-btns a.primary small { font-weight: 500; font-size: .8125rem; opacity: .85; font-family: var(--f-mono); }
+.contact-btns a.fb { background-color: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.contact-btns a.fb:hover { background-color: var(--surface); color: var(--accent); }
 footer { border-top: 1px solid var(--line); padding-block: 28px 40px; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; color: var(--ink-soft); }
 
@@ -254,6 +261,7 @@ a.primary.ms:hover { background-color: #0550C8; }
       <a href="#gallery">Gallery</a>
       <a href="#gallery" data-open-custom>Custom order</a>
       <a href="#how">How ordering works</a>
+      <a href="#contact">Contact us</a>
       <button class="cart-btn" id="openCart" type="button" aria-label="Open cart">Cart <span class="count" id="cartCount">0</span><span class="cart-total" id="cartTotal" hidden></span></button>
     </nav>
   </div>
@@ -291,6 +299,12 @@ a.primary.ms:hover { background-color: #0550C8; }
       <div class="step"><span class="n">03</span><h3>Confirm</h3><p>We reply with the final price and confirm your order.</p></div>
       <div class="step"><span class="n">04</span><h3>Print</h3><p>Your pieces go on the printer, usually ready within 3 to 5 days. We message you when they're done.</p></div>
     </div>
+  </section>
+
+  <section class="contact wrap" id="contact">
+    <div class="section-head"><h2>Contact us</h2></div>
+    <p class="contact-lead">Questions about a print, a color or a custom idea? Send us a message. We usually reply the same day.</p>
+    <div class="contact-btns" id="contactBtns"></div>
   </section>
 </main>
 
@@ -360,6 +374,7 @@ function priceOf(p) {
 const fmtTime = h => `${Math.floor(h)}h ${String(Math.round((h % 1) * 60)).padStart(2, "0")}m`;
 
 const PRODUCTS = [
+  { id: "custom", name: "Your Own Idea", cat: "Custom", custom: true, size: "Up to 256 mm", colors: Object.keys(COLORS), image: "" },
   { id: "katana", name: "Collapsing Katana", cat: "Toys", hours: 3.36, market: 20, grams: 113, size: "Slides open and shut", colors: ["Green", "Black", "Silver", "Maroon Red"], image: IMAGES["katana"], by: "mail.iou", mw: "1516584-collapsing-katana-fa-ren-forbearance-blade" },
   { id: "fidget", name: "Gear Fidget Cube", cat: "Toys", hours: 4.38, market: 5, grams: 63, size: "Turning gears", colors: ["Black", "Yellow", "Cyan", "Maroon Red"], image: IMAGES["fidget"], by: "3DEvan", mw: "900823-fidget-gear-cube" },
   { id: "octopus", name: "Mini Octopus", cat: "Toys", hours: 1.59, market: 8, grams: 22, colors: ["Pink", "Cyan", "Yellow", "Green"], image: IMAGES["octopus"], by: "mcgybeer", mw: "13859-cute-mini-octopus" },
@@ -409,7 +424,6 @@ const PRODUCTS = [
   { id: "poobag", name: "Dog Poo Bag Holder", cat: "Pets", hours: 2.39, market: 6, grams: 77, colors: ["Black", "Green", "Maroon Red"], image: IMAGES["poobag"], by: "MM3D Workshop", mw: "1196761-heavy-duty-dog-poo-bag-carrier-dispenser", note: "Fits standard poo bag rolls (bags not included)" },
   { id: "keys", name: "Name Keychain", cat: "Custom", hours: 0.73, market: 3.25, grams: 8, size: "Your name", colors: ["Pink", "Black", "Green", "Brown"], image: IMAGES["keys"], by: "Pumpkin Studios", mw: "2115391-name-keychain-generator-no-ams", note: "Key ring not included" },
   /* The custom print card: always last in the gallery, opens the request form */
-  { id: "custom", name: "Your Own Idea", cat: "Custom", custom: true, size: "Up to 256 mm", colors: Object.keys(COLORS), image: "" },
 ];
 PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 /* ====================================== */
@@ -499,7 +513,7 @@ function renderFilters() {
 
 
 /* Print-in animation for text: each element animates once, the first time it's on screen */
-const PRINT_SEL = ".brand, nav.links a, .cart-btn, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, footer span";
+const PRINT_SEL = ".brand, nav.links a, .cart-btn, .tagline, .hero-cta, .readout .label, .readout b, h2, .gallery-note, .chip, .card h3, .card .price, .credit, .spec, .note-line, .sw-name, .add, .stepper .mid, .photo .tag, .photo .in-cart, .step .n, .step h3, .step p, .contact-lead, footer span";
 const printedCards = new Set();
 const printIO = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
   entries.filter(e => e.isIntersecting).forEach((e, i) => {
@@ -697,8 +711,12 @@ $("#closeCart").onclick = () => openCart(false);
 $("#scrim").onclick = () => openCart(false);
 document.addEventListener("keydown", e => { if (e.key === "Escape") openCart(false); });
 
+$("#contactBtns").innerHTML =
+  `<a class="primary wa" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hi AnyThing 3D!")}" target="_blank" rel="noopener">WhatsApp<small>+${WHATSAPP_NUMBER.replace(/^(\d{2})(\d)(\d{4})(\d{4})$/, "$1 $2 $3 $4")}</small></a>` +
+  `<a class="primary ms" href="${MESSENGER_URL}" target="_blank" rel="noopener">Messenger<small>${FACEBOOK_NAME}</small></a>` +
+  `<a class="primary fb" href="${FACEBOOK_URL}" target="_blank" rel="noopener">Facebook page<small>${FACEBOOK_NAME}</small></a>`;
 renderFilters(); renderGrid(); updateCount();
-printify(document.querySelector("header")); printify(document.querySelector(".hero")); printify(document.querySelector("#how")); printify(document.querySelector("footer")); document.querySelectorAll(".section-head, .gallery-note").forEach(el => printIO && (el.matches(PRINT_SEL) ? printIO.observe(el) : printify(el)));
+printify(document.querySelector("header")); printify(document.querySelector(".hero")); printify(document.querySelector("#how")); printify(document.querySelector("#contact")); printify(document.querySelector("footer")); document.querySelectorAll(".section-head, .gallery-note").forEach(el => printIO && (el.matches(PRINT_SEL) ? printIO.observe(el) : printify(el)));
 </script>
 
 </html>
