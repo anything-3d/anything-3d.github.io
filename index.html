@@ -592,7 +592,7 @@ const STR = {
     all: "All", priceOnReq: "Price on request", credit: "Design &amp; photo: {by} on MakerWorld",
     customSpec: "PLA · {size} · you describe it, we price it", print: "print",
     size: "Size", original: "original", sizeWord: "size",
-    sizeNote: "Largest side {mm} mm · max {max}% fits our printer", sizeNoteEst: "Largest side about {mm} mm · max {max}% fits our printer",
+    sizeNote: "Max {max}% · fits 256 × 256 mm",
     sizeClamped: "{max}% is the biggest size that fits our printer", inCart: "{n} in cart",
     describe: "Describe your idea", chooseColors: "Choose colors", addToCart: "Add to cart",
     removeOne: "Remove one {name}", addOne: "Add one more {name}", multicolor: "Multicolor",
@@ -643,7 +643,7 @@ const STR = {
     all: "Alles", priceOnReq: "Prijs op aanvraag", credit: "Ontwerp en foto: {by} op MakerWorld",
     customSpec: "PLA · {size} · jij beschrijft het, wij maken een prijs", print: "printtijd",
     size: "Formaat", original: "origineel", sizeWord: "formaat",
-    sizeNote: "Grootste kant {mm} mm · max. {max}% past op onze printer", sizeNoteEst: "Grootste kant ongeveer {mm} mm · max. {max}% past op onze printer",
+    sizeNote: "Max. {max}% · past op 256 × 256 mm",
     sizeClamped: "{max}% is het grootste formaat dat op onze printer past", inCart: "{n} in winkelwagen",
     describe: "Beschrijf je idee", chooseColors: "Kies kleuren", addToCart: "In winkelwagen",
     removeOne: "Eén {name} minder", addOne: "Nog één {name} erbij", multicolor: "Meerkleurig",
@@ -847,7 +847,7 @@ function visibleProducts() {
   return list;
 }
 
-const scaleNote = (p, s) => t(SIZE_MM[p.id][1] ? "sizeNote" : "sizeNoteEst", { mm: Math.round(SIZE_MM[p.id][0] * s), max: Math.round(maxScaleOf(p) * 100) });
+const scaleNote = p => t("sizeNote", { max: Math.round(maxScaleOf(p) * 100) });
 /* While typing a size: update this card's price, specs and note without rebuilding the grid */
 function liveScale(p, s) {
   const card = document.querySelector(`.card[data-pid="${p.id}"]`); if (!card) return;
