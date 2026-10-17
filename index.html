@@ -243,6 +243,29 @@ form.order .check input { accent-color: var(--accent); margin: 0; }
 .pill.st-ready { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .pill.st-cancelled { text-decoration: line-through; }
 .ord select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.admin-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--pei); color: #1A1406; padding: 9px 18px; border-radius: 999px; font-weight: 800; font-size: 1rem; letter-spacing: .02em; }
+.admin-btn .count, .fav-btn .count { font-family: var(--f-mono); border-radius: 999px; min-width: 22px; padding: 0 6px; font-size: .75rem; line-height: 22px; text-align: center; }
+.admin-btn .count { background: #1A1406; color: var(--pei); }
+.admin-btn:hover { transform: scale(1.1); box-shadow: 0 12px 24px -12px rgba(0, 0, 0, .45); }
+.fav-btn { display: inline-flex; align-items: center; gap: 6px; }
+.fav-btn > span[aria-hidden] { color: #D6336C; }
+.fav-btn .count { background: var(--line); color: var(--ink); }
+@media (max-width: 640px) { .fav-btn .lbl { display: none; } .admin-btn { padding: 8px 12px; font-size: .9375rem; } }
+.drawer.wide { width: min(100%, 820px); }
+.adm-stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-stats .chip[aria-pressed="true"] { background: var(--ink); color: var(--plate); border-color: var(--ink); }
+.adm-stats .chip b { font-family: var(--f-mono); margin-left: 4px; }
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; align-items: start; }
+.card.flash { outline: 3px solid #D6336C; outline-offset: 4px; transition: outline-color .4s; }
+nav.links a, nav.links button, .brand-name { white-space: nowrap; }
+/* Account buttons take room: the How and FAQ links go (both are further down the page), and Contact too for the admin */
+nav.links:has(#favBtn:not([hidden])) a[href="#how"], nav.links:has(#favBtn:not([hidden])) a[href="#faq"], nav.links:has(#adminBtn:not([hidden])) a[href="#contact"] { display: none; }
+@media (max-width: 1100px) { nav.links:has(#favBtn:not([hidden])) a { display: none; } }
+.fav-cards { display: flex; flex-direction: column; gap: 12px; }
+.fav-card { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.fav-card img, .fav-card .ph { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; background: var(--plate); }
+.fav-card h3 { margin: 0; font-size: 1rem; }
+.fav-card .row-btns { margin-top: 6px; }
 .fav-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .fav-list li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .deliver .opts.pay-opts { grid-template-columns: 1fr; }
@@ -349,6 +372,8 @@ a.primary.ig:hover { background-color: #9E2A6C; }
         <button type="button" data-lang="nl" aria-pressed="false" title="Nederlands">NL</button>
         <button type="button" data-lang="en" aria-pressed="true" title="English">EN</button>
       </div>
+      <button class="admin-btn" id="adminBtn" type="button" hidden>Admin <span class="count" id="adminCount" hidden>0</span></button>
+      <button class="chip fav-btn" id="favBtn" type="button" hidden aria-pressed="false"><span aria-hidden="true">♥</span> <span class="lbl" data-t="favTitle">Favorites</span> <span class="count" id="favCount">0</span></button>
       <button class="chip acct-btn" id="acctBtn" type="button" hidden>Log in</button>
       <button class="cart-btn" id="openCart" type="button" aria-label="Open cart"><span data-t="cart">Cart</span> <span class="count" id="cartCount">0</span><span class="cart-total" id="cartTotal" hidden></span></button>
     </nav>
@@ -743,7 +768,7 @@ Object.assign(STR.en, {
   logout: "Log out", del: "Delete account",
   delSure: "This deletes your account, details, favorites and order history for good. Are you sure?",
   delYes: "Yes, delete everything", delNo: "Keep my account", deleted: "Your account is deleted.",
-  adminBtn: "All orders (admin)", adminTitle: "All orders", backAcct: "← Back to account",
+  adminBtn: "All orders (admin)", adminTitle: "Admin: all orders", adminNav: "Admin", admOpen: "To do", admAll: "All", admRefresh: "Refresh", admNone: "Nothing here.", favView: "Show in gallery", favLogin: "Log in to save your favorite prints.", backAcct: "← Back to account",
   subtotal: "Subtotal", firstOff: "First order −{off}",
   mOrderCode: "Order", mSubtotal: "Subtotal", mDiscount: "First-order discount ({off})",
   saveErr: "Couldn't save the order to your account ({err}). You can still send it.",
@@ -788,7 +813,7 @@ Object.assign(STR.nl, {
   logout: "Uitloggen", del: "Account verwijderen",
   delSure: "Hiermee verwijder je je account, gegevens, favorieten en bestelgeschiedenis voorgoed. Weet je het zeker?",
   delYes: "Ja, alles verwijderen", delNo: "Account houden", deleted: "Je account is verwijderd.",
-  adminBtn: "Alle bestellingen (beheer)", adminTitle: "Alle bestellingen", backAcct: "← Terug naar je account",
+  adminBtn: "Alle bestellingen (beheer)", adminTitle: "Beheer: alle bestellingen", adminNav: "Beheer", admOpen: "Te doen", admAll: "Alles", admRefresh: "Vernieuwen", admNone: "Niets hier.", favView: "Bekijk in galerij", favLogin: "Log in om je favoriete prints te bewaren.", backAcct: "← Terug naar je account",
   subtotal: "Subtotaal", firstOff: "Eerste bestelling −{off}",
   mOrderCode: "Bestelling", mSubtotal: "Subtotaal", mDiscount: "Korting eerste bestelling ({off})",
   saveErr: "Opslaan in je account lukte niet ({err}). Je kunt de bestelling wel versturen.",
@@ -1181,11 +1206,14 @@ function renderDrawer() {
 function openCart(o, mode, arg) {
   $("#drawer").hidden = !o; $("#scrim").hidden = !o;
   drawerMode = o ? (mode || "cart") : null; drawerArg = arg;
+  $("#drawer").classList.toggle("wide", drawerMode === "admin");
+  $("#favBtn").setAttribute("aria-pressed", drawerMode === "favs");
   if (!o) return;
   if (mode === "custom") { $("#drawerTitle").textContent = t("customTitle"); renderCustom(); }
   else if (mode === "multi") { $("#drawerTitle").textContent = t("multiTitle"); renderMulti(arg); }
   else if (mode === "account") { $("#drawerTitle").textContent = user ? t("acctTitle") : t("loginTitle"); renderAccount(); }
   else if (mode === "admin") { $("#drawerTitle").textContent = t("adminTitle"); renderAdmin(); }
+  else if (mode === "favs") { $("#drawerTitle").textContent = t("favTitle"); renderFavs(); }
   else if (mode === "privacy") { $("#drawerTitle").textContent = t("privacyTitle"); $("#drawerBody").innerHTML = `<div class="privacy">${t("privacyBody")}</div>`; }
   else { $("#drawerTitle").textContent = t("cartTitle"); view = "cart"; renderDrawer(); }
 }
@@ -1282,13 +1310,16 @@ async function setUser(u) {
     profile = p.data || {}; myOrders = o.data || []; favs = new Set((f.data || []).map(x => x.product_id)); isAdmin = a.data === true;
   }
   renderAcctBtn(); renderGrid();
-  if (drawerMode === "account" || drawerMode === "admin" || (drawerMode === "cart" && view === "cart")) openCart(true, drawerMode === "admin" && !isAdmin ? "account" : drawerMode);
+  if (drawerMode === "account" || drawerMode === "admin" || drawerMode === "favs" || (drawerMode === "cart" && view === "cart")) openCart(true, drawerMode === "admin" && !isAdmin ? "account" : drawerMode);
 }
 
 function renderAcctBtn() {
   const b = $("#acctBtn"); if (!b) return;
   b.textContent = user ? t("account") : t("login");
   b.setAttribute("aria-pressed", !!user);
+  $("#favBtn").hidden = !accountsOn(); $("#favCount").textContent = favs.size;
+  $("#adminBtn").hidden = !isAdmin; $("#adminBtn").firstChild.textContent = t("adminNav") + " ";
+  if (isAdmin) refreshAdminCount();
   renderWelcome();
 }
 /* "Welcome, Name!" above the gallery while someone is logged in */
@@ -1335,8 +1366,8 @@ function renderAccount() {
       <p class="note">${t("agree")}</p>`;
     return;
   }
-  const favList = PRODUCTS.filter(p => favs.has(p.id));
   body.innerHTML = `<p>${t("loggedInAs", { email: esc(user.email || "") })}</p>
+    ${isAdmin ? `<button type="button" class="admin-btn" data-admin="1">${t("adminBtn")}</button>` : ""}
     ${firstOrder() ? `<p class="perk">${t("perkReady")}</p>` : ""}
     <section class="acct-sec"><h3>${t("yourDetails")}</h3><p class="note">${t("detailsNote")}</p>
       <form class="order" id="profileForm">
@@ -1350,15 +1381,11 @@ function renderAccount() {
         <button class="primary" type="submit">${t("saveDetails")}</button>
       </form>
     </section>
-    <section class="acct-sec"><h3>${t("favTitle")}</h3>
-      ${favList.length ? `<ul class="fav-list">${favList.map(p => `<li><span>${pName(p)} <span class="note">${money(p.price)}</span></span><button type="button" class="chip" data-fav="${p.id}" aria-pressed="true" aria-label="${t("favOff")}: ${pName(p)}">♥</button></li>`).join("")}</ul>` : `<p class="note">${t("favEmpty")}</p>`}
-    </section>
     <section class="acct-sec"><h3>${t("ordersTitle")}</h3>
       ${myOrders === null ? `<p class="note">${t("loading")}</p>` : myOrders.length ? myOrders.map(o => orderCard(o, false)).join("") : `<p class="note">${t("ordersEmpty")}</p>`}
     </section>
     <section class="acct-sec">
       <div class="row-btns">
-        ${isAdmin ? `<button type="button" class="chip" data-admin="1">${t("adminBtn")}</button>` : ""}
         <button type="button" class="chip" data-logout="1">${t("logout")}</button>
         <button type="button" class="chip danger" data-delacct="ask">${t("del")}</button>
       </div>
@@ -1367,13 +1394,40 @@ function renderAccount() {
     </section>`;
 }
 
+/* Orders that still need something from the owner */
+const isOpen = o => !["done", "cancelled"].includes(o.status);
+let admFilter = "open";
+async function refreshAdminCount() {
+  const { count } = await sb.from("orders").select("id", { count: "exact", head: true }).not("status", "in", "(done,cancelled)");
+  const c = $("#adminCount"); c.hidden = !count; c.textContent = count || 0;
+}
 async function renderAdmin() {
   const body = $("#drawerBody");
-  body.innerHTML = `<button type="button" class="chip" data-acct="1">${t("backAcct")}</button><p class="note">${t("loading")}</p>`;
-  const { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false }).limit(200);
+  if (!body.querySelector(".adm-grid")) body.innerHTML = `<p class="note">${t("loading")}</p>`;
+  const { data, error } = await sb.from("orders").select("*").order("created_at", { ascending: false }).limit(300);
   if (drawerMode !== "admin") return;
-  body.innerHTML = `<button type="button" class="chip" data-acct="1">${t("backAcct")}</button>` +
-    (error ? `<p class="note">${t("err", { err: esc(error.message) })}</p>` : data.length ? data.map(o => orderCard(o, true)).join("") : `<p class="note">${t("ordersEmpty")}</p>`);
+  if (error) { body.innerHTML = `<p class="note">${t("err", { err: esc(error.message) })}</p>`; return; }
+  const n = k => k === "open" ? data.filter(isOpen).length : k === "all" ? data.length : data.filter(o => o.status === k).length;
+  const keys = ["open", ...Object.keys(t("status")), "all"];
+  const label = k => k === "open" ? t("admOpen") : k === "all" ? t("admAll") : t("status")[k];
+  const list = data.filter(o => admFilter === "open" ? isOpen(o) : admFilter === "all" || o.status === admFilter);
+  body.innerHTML = `<div class="adm-stats" role="group">${keys.map(k => `<button type="button" class="chip" data-admf="${k}" aria-pressed="${k === admFilter}">${label(k)}<b>${n(k)}</b></button>`).join("")}
+      <button type="button" class="chip" data-admin="1">↻ ${t("admRefresh")}</button></div>
+    ${list.length ? `<div class="adm-grid">${list.map(o => orderCard(o, true)).join("")}</div>` : `<p class="note">${t("admNone")}</p>`}`;
+  const c = $("#adminCount"); c.hidden = !n("open"); c.textContent = n("open");
+}
+
+function renderFavs() {
+  const body = $("#drawerBody");
+  if (!user) { body.innerHTML = `<p>${t("favLogin")}</p><button type="button" class="primary" data-acct="1">${t("login")}</button>`; return; }
+  const list = PRODUCTS.filter(p => favs.has(p.id));
+  body.innerHTML = list.length ? `<div class="fav-cards">${list.map(p => `<div class="fav-card">
+      ${p.image ? `<img src="${p.image}" alt="">` : `<div class="ph" aria-hidden="true"></div>`}
+      <div><h3>${pName(p)}</h3><span class="note">${money(p.price)}</span>
+        <div class="row-btns"><button type="button" class="chip" data-add="${p.id}">${t("addToCart")}</button>
+          <button type="button" class="chip" data-favgo="${p.id}">${t("favView")}</button>
+          <button type="button" class="chip" data-fav="${p.id}" aria-pressed="true" aria-label="${t("favOff")}: ${pName(p)}">♥</button></div></div>
+    </div>`).join("")}</div>` : `<p class="note">${t("favEmpty")}</p>`;
 }
 
 /* Save the order to the account; the database adds the code and the first-order discount */
@@ -1424,7 +1478,15 @@ function acctClick(e) {
   const run = async f => { try { await f(); } catch (err) { toast(t("err", { err: esc(err.message || err) })); } };
   if (b.id === "acctBtn" || b.dataset.acct) { openCart(true, "account"); return true; }
   if (b.dataset.privacy) { openCart(true, "privacy"); return true; }
-  if (b.dataset.admin) { openCart(true, "admin"); return true; }
+  if (b.dataset.admin || b.id === "adminBtn") { openCart(true, "admin"); return true; }
+  if (b.id === "favBtn") { openCart(true, "favs"); return true; }
+  if (b.dataset.admf) { admFilter = b.dataset.admf; renderAdmin(); return true; }
+  if (b.dataset.favgo) {
+    filter = "All"; search = ""; $("#search").value = ""; renderFilters(); renderToolbar(); renderGrid(); openCart(false);
+    const c = document.querySelector(`.card[data-pid="${b.dataset.favgo}"]`);
+    if (c) { c.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1600); }
+    return true;
+  }
   if (b.dataset.pay) { startPay(b.dataset.pay, b); return true; }
   if (b.dataset.copypay) { navigator.clipboard?.writeText(`${location.origin}/#pay/${b.dataset.copypay}`).then(() => toast(t("copied")), () => toast(`${location.origin}/#pay/${b.dataset.copypay}`)); return true; }
   if (b.dataset.markpaid || b.dataset.settotal) {
@@ -1443,7 +1505,7 @@ function acctClick(e) {
   if (b.dataset.fav) {
     const id = b.dataset.fav, on = !favs.has(id);
     on ? favs.add(id) : favs.delete(id);
-    renderGrid(); if (drawerMode === "account") renderAccount(); toast(on ? t("favOn") : t("favOff"));
+    renderGrid(); renderAcctBtn(); if (drawerMode === "favs") renderFavs(); toast(on ? t("favOn") : t("favOff"));
     run(async () => { const { error } = on ? await sb.from("favorites").insert({ user_id: user.id, product_id: id })
       : await sb.from("favorites").delete().eq("user_id", user.id).eq("product_id", id); if (error) throw error; });
     return true;
