@@ -223,6 +223,9 @@ form.order input, form.order textarea { font: inherit; padding: 10px 12px; borde
 
 /* Accounts */
 .acct-btn { padding: 7px 14px; }
+.name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#gallery { scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px)); }
+.welcome { margin: 0 0 6px; font-family: var(--f-display); font-weight: 700; font-size: var(--step-1); color: var(--accent); text-wrap: balance; }
 .perk { margin: 0; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--pei) 18%, var(--surface)); border: 1px solid color-mix(in srgb, var(--pei) 55%, var(--line)); font-size: .9375rem; }
 .linkbtn { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; font: inherit; }
 .acct-sec { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
@@ -369,6 +372,7 @@ a.primary.ig:hover { background-color: #9E2A6C; }
   </section>
 
   <section class="wrap" id="gallery">
+    <p class="welcome" id="welcome" hidden></p>
     <div class="section-head">
       <h2 data-t="hGallery">Gallery</h2>
       <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
@@ -721,6 +725,7 @@ const STR = {
 /* ===== ACCOUNT TEXT ===== */
 Object.assign(STR.en, {
   login: "Log in", account: "Account", loginTitle: "Log in", acctTitle: "Your account",
+  firstName: "First name", lastName: "Last name", welcome: "Welcome, {name}!",
   perk: "<b>{off} off your first order</b> when you're logged in.",
   perkCart: "Log in to get <b>{off} off</b> your first order.",
   perkReady: "Your first order gets <b>{off} off</b>.",
@@ -765,6 +770,7 @@ Object.assign(STR.en, {
 });
 Object.assign(STR.nl, {
   login: "Inloggen", account: "Account", loginTitle: "Inloggen", acctTitle: "Je account",
+  firstName: "Voornaam", lastName: "Achternaam", welcome: "Welkom, {name}!",
   perk: "<b>{off} korting op je eerste bestelling</b> als je bent ingelogd.",
   perkCart: "Log in en krijg <b>{off} korting</b> op je eerste bestelling.",
   perkReady: "Je eerste bestelling krijgt <b>{off} korting</b>.",
@@ -1283,6 +1289,14 @@ function renderAcctBtn() {
   const b = $("#acctBtn"); if (!b) return;
   b.textContent = user ? t("account") : t("login");
   b.setAttribute("aria-pressed", !!user);
+  renderWelcome();
+}
+/* "Welcome, Name!" above the gallery while someone is logged in */
+function renderWelcome() {
+  const w = $("#welcome"); if (!w) return;
+  const first = user && (profile.first_name || (profile.name || "").split(" ")[0]);
+  w.hidden = !first;
+  if (first) w.textContent = t("welcome", { name: first });
 }
 
 const statusPill = st => `<span class="pill st-${st}">${t("status")[st] || st}</span>`;
@@ -1326,7 +1340,10 @@ function renderAccount() {
     ${firstOrder() ? `<p class="perk">${t("perkReady")}</p>` : ""}
     <section class="acct-sec"><h3>${t("yourDetails")}</h3><p class="note">${t("detailsNote")}</p>
       <form class="order" id="profileForm">
-        <label for="pName">${t("yourName")}<input id="pName" autocomplete="name" value="${esc(profile.name || "")}"></label>
+        <div class="name-row">
+          <label for="pFirst">${t("firstName")}<input id="pFirst" required autocomplete="given-name" value="${esc(profile.first_name || "")}"></label>
+          <label for="pLast">${t("lastName")}<input id="pLast" autocomplete="family-name" value="${esc(profile.last_name || "")}"></label>
+        </div>
         <label for="pPhone">${t("phone")}<input id="pPhone" autocomplete="tel" placeholder="${t("phonePh")}" value="${esc(profile.phone || "")}"></label>
         <label class="check" for="pSaveAddr"><input type="checkbox" id="pSaveAddr"${profile.save_address ? " checked" : ""}>${t("saveAddr")}</label>
         <label for="pAddr" id="pAddrWrap"${profile.save_address ? "" : " hidden"}>${t("address")}<textarea id="pAddr" rows="3" autocomplete="street-address">${esc(profile.address || "")}</textarea></label>
@@ -1370,8 +1387,9 @@ async function saveOrder() {
   if (error) { toast(t("saveErr", { err: esc(error.message) })); return null; }
   myOrders = [data, ...(myOrders || [])];
   if (!profile.name || !profile.phone) {   // remember name and phone for next time
-    profile = { ...profile, name: profile.name || $("#oName").value.trim(), phone: profile.phone || $("#oContact").value.trim() };
-    sb.from("profiles").upsert({ id: user.id, name: profile.name, phone: profile.phone, updated_at: new Date().toISOString() }).then(() => {});   // queries only run once awaited
+    const full = $("#oName").value.trim();
+    profile = { ...profile, name: profile.name || full, first_name: profile.first_name || full.split(" ")[0], last_name: profile.last_name || full.split(" ").slice(1).join(" "), phone: profile.phone || $("#oContact").value.trim() };
+    sb.from("profiles").upsert({ id: user.id, name: profile.name, first_name: profile.first_name, last_name: profile.last_name, phone: profile.phone, updated_at: new Date().toISOString() }).then(() => {});   // queries only run once awaited
   }
   return data;
 }
@@ -1444,11 +1462,15 @@ document.addEventListener("submit", async e => {
   } else if (e.target.id === "profileForm") {
     e.preventDefault();
     const keep = $("#pSaveAddr").checked;
-    const row = { id: user.id, name: $("#pName").value.trim(), phone: $("#pPhone").value.trim(), save_address: keep,
-      address: keep ? $("#pAddr").value.trim() : null, updated_at: new Date().toISOString() };
+    const first = $("#pFirst").value.trim(), last = $("#pLast").value.trim();
+    const row = { id: user.id, first_name: first, last_name: last, name: [first, last].filter(Boolean).join(" "), phone: $("#pPhone").value.trim(),
+      save_address: keep, address: keep ? $("#pAddr").value.trim() : null, updated_at: new Date().toISOString() };
     const { error } = await sb.from("profiles").upsert(row);
     if (error) { toast(t("err", { err: esc(error.message) })); return; }
-    profile = row; toast(t("saved"));
+    profile = row; renderWelcome();
+    openCart(false);   // back to the shop
+    $("#gallery").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    toast(t("saved"));
   }
 });
 document.addEventListener("change", async e => {
