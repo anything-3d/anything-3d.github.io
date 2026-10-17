@@ -536,8 +536,8 @@ const PRODUCTS = [
 PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 /* ====================================== */
 /* ===== ACCOUNTS — fill in both to switch on logging in (see supabase/setup.sql). Empty = no accounts. ===== */
-const SUPABASE_URL = "";           // Project URL, e.g. "https://abcd1234.supabase.co"
-const SUPABASE_KEY = "";           // the "anon public" key (safe on a website). NEVER the service_role key.
+const SUPABASE_URL = "https://mvnnxgkkjnyggtetdfia.supabase.co";           // Project URL, e.g. "https://abcd1234.supabase.co"
+const SUPABASE_KEY = "sb_publishable_jgHaHM-seYAagAILDGoHFg_W0Bm_V5y";           // the publishable / "anon public" key (safe on a website). NEVER the secret / service_role key.
 const ONLINE_PAY = false;         // true once Stripe is connected: customers can pay on the site after you confirm
 const FIRST_ORDER_OFF = 0.20;      // 20% off a customer's first order; keep the same as 0.20 in setup.sql
 
@@ -1239,7 +1239,7 @@ function initAccounts() {
   $("#acctBtn").hidden = false; $("#privacyLink").hidden = false;
   const fromLink = /access_token|error_description/.test(location.hash);
   const s = document.createElement("script");
-  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
+  s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js";
   s.onload = () => {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     sb.auth.onAuthStateChange((ev, session) => setTimeout(async () => {
