@@ -535,7 +535,7 @@ PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 const SUPABASE_URL = "";           // Project URL, e.g. "https://abcd1234.supabase.co"
 const SUPABASE_KEY = "";           // the "anon public" key (safe on a website). NEVER the service_role key.
 const ONLINE_PAY = false;         // true once Stripe is connected: customers can pay on the site after you confirm
-const FIRST_ORDER_OFF = 0.10;      // 10% off a customer's first order; keep the same as 0.10 in setup.sql
+const FIRST_ORDER_OFF = 0.20;      // 20% off a customer's first order; keep the same as 0.20 in setup.sql
 
 /* ===== MORE SETTINGS ===== */
 const WARRANTY_DAYS = 30;          // free reprint for breaks or print faults within this many days
