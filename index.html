@@ -433,6 +433,8 @@ const IMAGES = {"airtag": "images/airtag.png?v=1fb446a9", "alivetree": "images/a
 <script>
 /* ===== SHOP SETTINGS — edit these ===== */
 const CURRENCY = "€";
+const SHIPPING_COST = 5.99;                                     // postage for one parcel
+const PACKAGING_COST = 1.00;                                    // box, padding and tape
 const MULTICOLOR_EXTRA = 1.99;                                  // extra price for a multicolor print (2–4 colors)
 const MULTI = "Multicolor";
 const FACEBOOK_NAME = "AnyThing 3D";                         // name customers look for on Facebook
@@ -646,7 +648,7 @@ const STR = {
     each: "each", total: "Total", remove: "Remove", decrease: "Decrease", increase: "Increase",
     yourName: "Your name", phone: "Phone number", phonePh: "e.g. 06 12345678", notes: "Notes (custom text, deadline)", prepare: "Prepare order request",
     deliverQ: "Pickup or shipping?", pickup: "Pickup", shipping: "Shipping", pickNote: "We'll send you the pickup address in the chat.",
-    address: "Your address (street, house number, postcode, city)", shipNote: "Shipping cost is confirmed in the chat.",
+    address: "Your address (street, house number, postcode, city)", shipNote: "Shipping + packaging: {ship} per order.", shipLine: "Shipping + packaging", mShip: "Shipping + packaging",
     mDeliveryPick: "Delivery: Pickup", mDeliveryShip: "Delivery: Shipping\nAddress: {addr}",
     orderReady: "Your order request is ready. Send it to us and we'll reply with the final price.",
     alsoFb: "You can also find us on {fb}.", back: "Back to cart",
@@ -697,7 +699,7 @@ const STR = {
     each: "per stuk", total: "Totaal", remove: "Verwijderen", decrease: "Minder", increase: "Meer",
     yourName: "Je naam", phone: "Telefoonnummer", phonePh: "bijv. 06 12345678", notes: "Opmerkingen (bijv. eigen tekst of een datum)", prepare: "Bestelaanvraag klaarmaken",
     deliverQ: "Ophalen of verzenden?", pickup: "Ophalen", shipping: "Verzenden", pickNote: "We sturen je het ophaaladres in de chat.",
-    address: "Je adres (straat, huisnummer, postcode, plaats)", shipNote: "De verzendkosten spreken we af in de chat.",
+    address: "Je adres (straat, huisnummer, postcode, plaats)", shipNote: "Verzending + verpakking: {ship} per bestelling.", shipLine: "Verzending + verpakking", mShip: "Verzending + verpakking",
     mDeliveryPick: "Levering: Ophalen", mDeliveryShip: "Levering: Verzenden\nAdres: {addr}",
     orderReady: "Je bestelaanvraag is klaar. Stuur hem naar ons en we reageren met de definitieve prijs.",
     alsoFb: "Je vindt ons ook op {fb}.", back: "Terug naar winkelwagen",
@@ -825,15 +827,16 @@ const FAQ = [
     nl: ["Mag PLA in de vaatwasser, de zon of een warme auto?", "Nee. PLA wordt zacht vanaf ongeveer 55 °C. Was het met de hand in lauw water en houd het uit een warme auto en de felle zomerzon."] },
   { en: ["Is it food safe?", "We can't promise that. Cookie cutters are fine for short contact with dough. Wash them by hand after use."],
     nl: ["Is het voedselveilig?", "Dat kunnen we niet beloven. Koekjesuitstekers zijn prima voor kort contact met deeg. Was ze na gebruik met de hand af."] },
-  { en: ["Pickup or shipping?", "Both are possible. Choose in the order form. If you want it shipped, we agree on the shipping cost in the chat first."],
-    nl: ["Ophalen of verzenden?", "Allebei kan. Kies het in het bestelformulier. Wil je het laten verzenden, dan spreken we eerst de verzendkosten af in de chat."] },
+  { en: ["Pickup or shipping?", "Both are possible. Choose in the order form. Pickup is free. Shipping costs {ship} per order, including packaging."],
+    nl: ["Ophalen of verzenden?", "Allebei kan. Kies het in het bestelformulier. Ophalen is gratis. Verzenden kost {ship} per bestelling, inclusief verpakking."] },
 ];
 
 /* ===== LANGUAGE ===== */
 let lang = "en";
 try { lang = localStorage.getItem("a3d-lang") || ((navigator.language || "").toLowerCase().startsWith("nl") ? "nl" : "en"); } catch (e) {}
 if (!STR[lang]) lang = "en";
-const vars = () => ({ multi: money(MULTICOLOR_EXTRA), days: WARRANTY_DAYS, off: Math.round(FIRST_ORDER_OFF * 100) + "%" });
+const SHIP_FEE = SHIPPING_COST + PACKAGING_COST;   // added once per order when the customer picks Shipping
+const vars = () => ({ ship: money(SHIP_FEE), multi: money(MULTICOLOR_EXTRA), days: WARRANTY_DAYS, off: Math.round(FIRST_ORDER_OFF * 100) + "%" });
 const t = (k, v = {}) => { const s = STR[lang][k] ?? STR.en[k] ?? k; return typeof s === "string" ? s.replace(/\{(\w+)\}/g, (_, x) => v[x] ?? vars()[x] ?? "") : s; };
 const nlOf = p => lang === "nl" ? (NL[p.id] || {}) : {};
 const pName = p => nlOf(p).name || p.name;
@@ -894,6 +897,7 @@ document.addEventListener("change", e => {
   const k = r.name.slice(0, -7), ship = r.value === "Shipping";
   $(`#${k}AddrWrap`).hidden = !ship; $(`#${k}Addr`).required = ship; $(`#${k}PickNote`).hidden = ship;
   if (ship && k === "o" && !$("#oAddr").value && profile.address) $("#oAddr").value = profile.address;
+  if (k === "o" && $("#cartTotals")) $("#cartTotals").innerHTML = totalsHtml(cartItemsTotal(), ship);
   if (k === "o" && $("#payCash")) { $("#payCash").disabled = ship; if (ship && $("#payCash").checked) $("#payTikkie").checked = true; }
   if (ship) $(`#${k}Addr`).focus();
 });
@@ -1115,6 +1119,17 @@ function removeOne(id) {
   save(); updateCount(); renderGrid();
 }
 
+/* Cart totals: items, first-order discount (items only), shipping + packaging when shipping */
+function totalsHtml(total, ship) {
+  const off = firstOrder() ? offOf(total) : 0, fee = ship ? SHIP_FEE : 0;
+  const row = (l, v, cls = "") => `<div class="total"><span>${l}</span><span${cls}>${v}</span></div>`;
+  return (off || fee ? row(t("subtotal"), money(total)) : "") +
+    (off ? row(t("firstOff"), "−" + money(off)) : "") +
+    (fee ? row(t("shipLine"), money(fee)) : "") +
+    row(t("total"), money(total - off + fee), ' class="price"');
+}
+const cartItemsTotal = () => cart.map(i => ({ ...i, p: PRODUCTS.find(p => p.id === i.id) })).filter(i => i.p).reduce((s, i) => s + linePrice(i) * i.qty, 0);
+
 let view = "cart", drawerMode = null, drawerArg = null;
 function renderDrawer() {
   const body = $("#drawerBody");
@@ -1127,10 +1142,7 @@ function renderDrawer() {
         <div>${pName(i.p)}<small>${lineLabel(i)} · ${money(linePrice(i))} ${t("each")}</small></div>
         <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="${t("decrease")}">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="${t("increase")}">+</button><button type="button" class="del" data-del="${k}" aria-label="${t("remove")} ${pName(i.p)}">${t("remove")}</button></div>
       </div>`).join("") +
-      (firstOrder() ? `<div class="total"><span>${t("subtotal")}</span><span>${money(total)}</span></div>
-         <div class="total"><span>${t("firstOff")}</span><span>−${money(offOf(total))}</span></div>
-         <div class="total"><span>${t("total")}</span><span class="price">${money(total - offOf(total))}</span></div>`
-        : `<div class="total"><span>${t("total")}</span><span class="price">${money(total)}</span></div>`) +
+      `<div id="cartTotals">${totalsHtml(total, false)}</div>` +
       (accountsOn() && !user ? `<p class="perk">${t("perkCart")} <button type="button" class="linkbtn" data-acct="1">${t("login")}</button></p>` : "") +
       `<form class="order" id="orderForm">
          <label for="oName">${t("yourName")}<input id="oName" required autocomplete="name" value="${esc(profile.name || "")}"></label>
@@ -1141,9 +1153,12 @@ function renderDrawer() {
          <button class="primary" type="submit">${t("prepare")}</button>
        </form>`;
   } else {
-    const o = view.order, off = o ? +o.discount : 0;
+    const o = view.order, off = o ? +o.discount : 0, fee = view.ship ? SHIP_FEE : 0;
     const text = `${t("mOrder")}${o ? ` (${t("mOrderCode")} ${o.code})` : ""}\n\n` + items.map(i => `${i.qty} × ${pName(i.p)} (${lineLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
-      (off ? `\n\n${t("mSubtotal")}: ${money(total)}\n${t("mDiscount")}: −${money(off)}\n${t("mTotal")}: ${money(total - off)}` : `\n\n${t("mTotal")}: ${money(total)}`) +
+      (off || fee ? `\n\n${t("mSubtotal")}: ${money(total)}` : "\n") +
+      (off ? `\n${t("mDiscount")}: −${money(off)}` : "") +
+      (fee ? `\n${t("mShip")}: ${money(fee)}` : "") +
+      `\n${t("mTotal")}: ${money(total - off + fee)}` +
       `\n${t("mPay")}: ${t("pay_" + view.payment)}` +
       `\n${t("mName")}: ${view.name}\n${t("mContact")}: ${view.contact}\n${view.delivery}\n${t("mNotes")}: ${view.notes || "—"}`;
     body.innerHTML = `<p>${t("orderReady")}</p>
@@ -1202,7 +1217,7 @@ document.addEventListener("submit", async e => {
   if (e.target.id !== "orderForm") return;
   e.preventDefault();
   const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
-  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), payment: payChoice(), order: await saveOrder() };
+  view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), ship: $("#oShip").checked, payment: payChoice(), order: await saveOrder() };
   renderDrawer();
 });
 $("#openCart").onclick = () => openCart(true);
@@ -1277,6 +1292,7 @@ const orderCard = (o, admin) => `<div class="ord">
     <ul>${(o.items || []).map(i => `<li>${i.qty} × ${esc(i.name)} <span class="note">(${esc(i.label)})</span></li>`).join("")}</ul>
     ${admin ? `<div class="note">${esc(o.delivery || "")}${o.notes ? ` · ${esc(o.notes)}` : ""}</div>` : ""}
     ${+o.discount ? `<div class="note">${t("mDiscount")}: −${money(+o.discount)}</div>` : ""}
+    ${+o.shipping ? `<div class="note">${t("mShip")}: ${money(+o.shipping)}</div>` : ""}
     <div class="ord-sum"><span>${t("total")}</span>${admin && !o.paid_at ? `<span><input class="tot" type="number" step="0.01" min="0" id="tot-${o.id}" value="${(+o.total).toFixed(2)}" aria-label="${t("total")}"> <button type="button" class="chip" data-settotal="${o.id}">${t("saveTotal")}</button></span>` : `<span>${money(+o.total)}</span>`}</div>
     <div class="ord-head"><span class="note">${t("pay_" + (o.payment || "tikkie"))}</span>${o.paid_at ? `<span class="pill st-paid">${t("paid")}</span>` : ""}</div>
     ${payActions(o, admin)}
