@@ -261,6 +261,19 @@ nav.links a, nav.links button, .brand-name { white-space: nowrap; }
 /* Account buttons take room: the How and FAQ links go (both are further down the page), and Contact too for the admin */
 nav.links:has(#favBtn:not([hidden])) a[href="#how"], nav.links:has(#favBtn:not([hidden])) a[href="#faq"], nav.links:has(#adminBtn:not([hidden])) a[href="#contact"] { display: none; }
 @media (max-width: 1100px) { nav.links:has(#favBtn:not([hidden])) a { display: none; } }
+.gate { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: 12px; background: color-mix(in srgb, var(--pei) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--pei) 55%, var(--line)); }
+.gate h3 { margin: 0; font-family: var(--f-display); font-size: 1.0625rem; }
+.gate p { margin: 0; }
+.tk { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 6px; }
+.tk-btn { text-decoration: none; display: inline-block; }
+.tk-qr { display: flex; align-items: center; gap: 10px; }
+.tk-qr .qr { width: 112px; height: 112px; background: #fff; border-radius: 8px; padding: 4px; }
+.tk-qr .qr svg { display: block; width: 100%; height: 100%; }
+.tk-qr .note { max-width: 14em; margin: 0; }
+@media (hover: none) and (pointer: coarse) { .tk-qr { display: none; } }
+.tk-admin { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.tk-row { display: flex; gap: 6px; }
+.tk-row input { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
 .fav-cards { display: flex; flex-direction: column; gap: 12px; }
 .fav-card { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .fav-card img, .fav-card .ph { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; background: var(--plate); }
@@ -568,7 +581,9 @@ PRODUCTS.forEach(p => { if (!p.custom) p.price = priceOf(p); });
 const SUPABASE_URL = "https://mvnnxgkkjnyggtetdfia.supabase.co";           // Project URL, e.g. "https://abcd1234.supabase.co"
 const SUPABASE_KEY = "sb_publishable_jgHaHM-seYAagAILDGoHFg_W0Bm_V5y";           // the publishable / "anon public" key (safe on a website). NEVER the secret / service_role key.
 const ONLINE_PAY = false;         // true once Stripe is connected: customers can pay on the site after you confirm
-const FIRST_ORDER_OFF = 0.20;      // 20% off a customer's first order; keep the same as 0.20 in setup.sql
+const FIRST_ORDER_OFF = 0.20;
+/* true = people must log in before they can order. Switch on once customers get login emails (custom SMTP, e.g. Resend). */
+const LOGIN_TO_ORDER = false;      // 20% off a customer's first order; keep the same as 0.20 in setup.sql
 
 /* ===== MORE SETTINGS ===== */
 const WARRANTY_DAYS = 30;          // free reprint for breaks or print faults within this many days
@@ -654,7 +669,7 @@ const STR = {
     noResults: "No prints match “{q}”. Try another word, or ask for it as a custom order.",
     hHow: "How ordering works",
     s1h: "Choose", s1p: "Add prints to your cart, or describe a custom print.",
-    s2h: "Message us", s2p: "Send your request to us on WhatsApp or Messenger. It's already written for you.",
+    s2h: "Message us", s2p: "Send your request to us on WhatsApp or Messenger. It's already written for you.", s2pLogin: "Log in with your email, then send your request on WhatsApp or Messenger. It's already written for you.",
     s3h: "Confirm", s3p: "We reply with the final price and confirm your order.",
     s4h: "Print", s4p: "Your pieces go on the printer, usually ready within 3 to 5 days. We message you when they're done.",
     hAbout: "About AnyThing 3D",
@@ -705,7 +720,7 @@ const STR = {
     noResults: "Geen prints gevonden voor “{q}”. Probeer een ander woord, of vraag het aan als print op maat.",
     hHow: "Zo bestel je",
     s1h: "Kiezen", s1p: "Zet prints in je winkelwagen, of beschrijf een print op maat.",
-    s2h: "Bericht sturen", s2p: "Stuur je aanvraag via WhatsApp of Messenger. Het bericht staat al voor je klaar.",
+    s2h: "Bericht sturen", s2p: "Stuur je aanvraag via WhatsApp of Messenger. Het bericht staat al voor je klaar.", s2pLogin: "Log in met je e-mailadres en stuur je aanvraag via WhatsApp of Messenger. Het bericht staat al voor je klaar.",
     s3h: "Bevestigen", s3p: "We sturen je de definitieve prijs en bevestigen je bestelling.",
     s4h: "Printen", s4p: "Je prints gaan op de printer en zijn meestal binnen 3 tot 5 dagen klaar. Zodra ze klaar zijn, sturen we je een bericht.",
     hAbout: "Over AnyThing 3D",
@@ -753,6 +768,7 @@ Object.assign(STR.en, {
   firstName: "First name", lastName: "Last name", welcome: "Welcome, {name}!",
   perk: "<b>{off} off your first order</b> when you're logged in.",
   perkCart: "Log in to get <b>{off} off</b> your first order.",
+  gateTitle: "Log in to order", gateText: "You need an account to place an order. It only takes your email (no password), and you get <b>{off} off</b> your first order. Your cart stays saved.", gateBtn: "Log in to order",
   perkReady: "Your first order gets <b>{off} off</b>.",
   loginIntro: "Log in or make an account with just your email. We email you a login link, so there's no password to remember.",
   email: "Email", sendLink: "Email me a login link", sending: "Sending…",
@@ -774,6 +790,7 @@ Object.assign(STR.en, {
   saveErr: "Couldn't save the order to your account ({err}). You can still send it.",
   err: "Something went wrong ({err}). Try again.",
   status: { new: "Received", confirmed: "Confirmed", printing: "Printing", ready: "Ready", done: "Done", cancelled: "Cancelled" },
+  tikkieLink: "Tikkie link", tikkieSave: "Save link", tikkiePay: "Pay {amount} with Tikkie", tikkieScan: "On a computer? Scan this with your phone.", tikkieBad: "That isn't a Tikkie link. It starts with https://tikkie.me/", tikkieWait: "Your Tikkie payment link shows up here once we've confirmed your order.", tikkieHow: "Make a Tikkie for {amount} in your Tikkie app, copy the link and paste it here.",
   payQ: "How do you want to pay?", pay_online: "Pay online on this site", pay_tikkie: "Tikkie / payment request", pay_cash: "Cash at pickup",
   payMethodsShort: "iDEAL (QR code), Google Pay, Apple Pay, card, PayPal, Klarna and more",
   payWhen: "You pay after we confirm your order and the final price.",
@@ -798,6 +815,7 @@ Object.assign(STR.nl, {
   firstName: "Voornaam", lastName: "Achternaam", welcome: "Welkom, {name}!",
   perk: "<b>{off} korting op je eerste bestelling</b> als je bent ingelogd.",
   perkCart: "Log in en krijg <b>{off} korting</b> op je eerste bestelling.",
+  gateTitle: "Log in om te bestellen", gateText: "Je hebt een account nodig om te bestellen. Je hebt alleen je e-mailadres nodig (geen wachtwoord) en je krijgt <b>{off} korting</b> op je eerste bestelling. Je winkelwagen blijft bewaard.", gateBtn: "Inloggen om te bestellen",
   perkReady: "Je eerste bestelling krijgt <b>{off} korting</b>.",
   loginIntro: "Log in of maak een account aan met alleen je e-mailadres. We mailen je een inloglink, dus je hoeft geen wachtwoord te onthouden.",
   email: "E-mailadres", sendLink: "Mail mij een inloglink", sending: "Versturen…",
@@ -819,6 +837,7 @@ Object.assign(STR.nl, {
   saveErr: "Opslaan in je account lukte niet ({err}). Je kunt de bestelling wel versturen.",
   err: "Er ging iets mis ({err}). Probeer het opnieuw.",
   status: { new: "Ontvangen", confirmed: "Bevestigd", printing: "Wordt geprint", ready: "Klaar", done: "Afgerond", cancelled: "Geannuleerd" },
+  tikkieLink: "Tikkie-link", tikkieSave: "Link opslaan", tikkiePay: "Betaal {amount} met Tikkie", tikkieScan: "Op een computer? Scan dit met je telefoon.", tikkieBad: "Dat is geen Tikkie-link. Hij begint met https://tikkie.me/", tikkieWait: "Je Tikkie-betaallink komt hier zodra we je bestelling hebben bevestigd.", tikkieHow: "Maak een Tikkie van {amount} in je Tikkie-app, kopieer de link en plak hem hier.",
   payQ: "Hoe wil je betalen?", pay_online: "Online betalen op deze site", pay_tikkie: "Tikkie / betaalverzoek", pay_cash: "Contant bij ophalen",
   payMethodsShort: "iDEAL (QR-code), Google Pay, Apple Pay, creditcard, PayPal, Klarna en meer",
   payWhen: "Je betaalt nadat we je bestelling en de definitieve prijs hebben bevestigd.",
@@ -933,8 +952,13 @@ document.addEventListener("change", e => {
   if (ship) $(`#${k}Addr`).focus();
 });
 
+/* Ordering needs an account (when accounts are switched on) */
+const mustLogin = () => LOGIN_TO_ORDER && accountsOn() && !user;
+const loginGate = () => `<div class="gate"><h3>${t("gateTitle")}</h3><p>${t("gateText")}</p><button type="button" class="primary" data-acct="1">${t("gateBtn")}</button></div>`;
+
 function renderCustom() {
   const col = picked.custom || "Black";
+  if (mustLogin()) { $("#drawerBody").innerHTML = `<p>${t("cIntro")}</p>${loginGate()}`; return; }
   $("#drawerBody").innerHTML = `<p>${t("cIntro")}</p>
     <form class="order" id="customForm">
       <label for="cWhat">${t("cWhat")}<textarea id="cWhat" rows="4" required placeholder="${t("cWhatPh")}"></textarea></label>
@@ -952,6 +976,7 @@ function renderCustom() {
 
 document.addEventListener("submit", e => {
   if (e.target.id !== "customForm") return;
+  if (mustLogin()) { e.preventDefault(); renderCustom(); return; }
   e.preventDefault();
   const v = id => $(id).value.trim();
   const sel = $("#cColor"), color = sel.options[sel.selectedIndex].text;
@@ -1174,15 +1199,14 @@ function renderDrawer() {
         <div class="qty"><button type="button" data-q="${k}" data-d="-1" aria-label="${t("decrease")}">−</button><span>${i.qty}</span><button type="button" data-q="${k}" data-d="1" aria-label="${t("increase")}">+</button><button type="button" class="del" data-del="${k}" aria-label="${t("remove")} ${pName(i.p)}">${t("remove")}</button></div>
       </div>`).join("") +
       `<div id="cartTotals">${totalsHtml(total, false)}</div>` +
-      (accountsOn() && !user ? `<p class="perk">${t("perkCart")} <button type="button" class="linkbtn" data-acct="1">${t("login")}</button></p>` : "") +
-      `<form class="order" id="orderForm">
+      (mustLogin() ? loginGate() : `<form class="order" id="orderForm">
          <label for="oName">${t("yourName")}<input id="oName" required autocomplete="name" value="${esc(profile.name || "")}"></label>
          <label for="oContact">${t("phone")}<input id="oContact" required autocomplete="tel" placeholder="${t("phonePh")}" value="${esc(profile.phone || "")}"></label>
          ${deliveryFields("o")}
          ${payFields()}
          <label for="oNotes">${t("notes")}<textarea id="oNotes" rows="3"></textarea></label>
          <button class="primary" type="submit">${t("prepare")}</button>
-       </form>`;
+       </form>`);
   } else {
     const o = view.order, off = o ? +o.discount : 0, fee = view.ship ? SHIP_FEE : 0;
     const text = `${t("mOrder")}${o ? ` (${t("mOrderCode")} ${o.code})` : ""}\n\n` + items.map(i => `${i.qty} × ${pName(i.p)} (${lineLabel(i)}) — ${money(linePrice(i) * i.qty)}`).join("\n") +
@@ -1250,6 +1274,7 @@ document.addEventListener("submit", e => {
 document.addEventListener("submit", async e => {
   if (e.target.id !== "orderForm") return;
   e.preventDefault();
+  if (mustLogin()) { renderDrawer(); return; }
   const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
   view = { name: $("#oName").value, contact: $("#oContact").value, notes: $("#oNotes").value, delivery: deliveryText("o"), ship: $("#oShip").checked, payment: payChoice(), order: await saveOrder() };
   renderDrawer();
@@ -1278,7 +1303,7 @@ function initAccounts() {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     sb.auth.onAuthStateChange((ev, session) => setTimeout(async () => {
       await setUser(session?.user || null);
-      if (ev === "SIGNED_IN" && fromLink && user) { history.replaceState(null, "", location.pathname); openCart(true, "account"); }
+      if (ev === "SIGNED_IN" && fromLink && user) { history.replaceState(null, "", location.pathname); openCart(true, cart.length && (profile.first_name || profile.name) ? "cart" : "account"); }
       if (ev === "INITIAL_SESSION") handleHash();
     }, 0));
   };
@@ -1310,7 +1335,7 @@ async function setUser(u) {
     profile = p.data || {}; myOrders = o.data || []; favs = new Set((f.data || []).map(x => x.product_id)); isAdmin = a.data === true;
   }
   renderAcctBtn(); renderGrid();
-  if (drawerMode === "account" || drawerMode === "admin" || drawerMode === "favs" || (drawerMode === "cart" && view === "cart")) openCart(true, drawerMode === "admin" && !isAdmin ? "account" : drawerMode);
+  if (drawerMode === "account" || drawerMode === "admin" || drawerMode === "favs" || drawerMode === "custom" || (drawerMode === "cart" && view === "cart")) openCart(true, drawerMode === "admin" && !isAdmin ? "account" : drawerMode);
 }
 
 function renderAcctBtn() {
@@ -1343,8 +1368,28 @@ const orderCard = (o, admin) => `<div class="ord">
     ${payActions(o, admin)}
   </div>`;
 const canPay = o => ONLINE_PAY && o.payment === "online" && !o.paid_at && ["confirmed", "printing", "ready"].includes(o.status);
+const isTikkie = l => /^https:\/\/tikkie\.me\/[\w\-\/]+$/.test(l || "");
+function tikkieBox(o, admin) {
+  if ((o.payment || "tikkie") !== "tikkie") return "";
+  if (admin) return `<div class="tk-admin"><label for="tk-${o.id}" class="note">${t("tikkieHow", { amount: money(+o.total) })}</label>
+      <span class="tk-row"><input id="tk-${o.id}" type="url" inputmode="url" placeholder="https://tikkie.me/pay/…" value="${esc(o.pay_link || "")}" aria-label="${t("tikkieLink")}"> <button type="button" class="chip" data-savetk="${o.id}">${t("tikkieSave")}</button></span></div>`;
+  if (!isTikkie(o.pay_link)) return o.status === "new" ? `<p class="note">${t("tikkieWait")}</p>` : "";
+  return `<div class="tk"><a class="primary tk-btn" href="${esc(o.pay_link)}" target="_blank" rel="noopener">${t("tikkiePay", { amount: money(+o.total) })}</a>
+      <div class="tk-qr"><div class="qr" data-qr="${esc(o.pay_link)}" aria-hidden="true"></div><p class="note">${t("tikkieScan")}</p></div></div>`;
+}
+/* QR codes for Tikkie links (library only loads when one is on screen) */
+function drawQrs() {
+  const els = [...document.querySelectorAll("[data-qr]:empty")]; if (!els.length) return;
+  const draw = () => els.forEach(el => { const q = qrcode(0, "M"); q.addData(el.dataset.qr); q.make(); el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); });
+  if (window.qrcode) return draw();
+  const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; s.onload = draw; document.head.appendChild(s);
+}
 function payActions(o, admin) {
   if (o.paid_at || o.status === "cancelled") return "";
+  const tk = tikkieBox(o, admin);
+  return tk + payActionsRest(o, admin);
+}
+function payActionsRest(o, admin) {
   if (admin) return `<div class="row-btns">${canPay(o) ? `<button type="button" class="chip" data-copypay="${esc(o.code)}">${t("copyPay")}</button>` : ""}<button type="button" class="chip" data-markpaid="${o.id}">${t("markPaid")}</button></div>`;
   if (canPay(o)) return `<button type="button" class="primary" data-pay="${o.id}">${t("payNow", { amount: money(+o.total) })}</button><p class="note">${t("payMethods")}</p>`;
   if (ONLINE_PAY && o.payment === "online" && o.status === "new") return `<p class="note">${t("payAfter")}</p>`;
@@ -1392,6 +1437,7 @@ function renderAccount() {
       ${delAsk ? `<p class="note" role="alert">${t("delSure")}</p>
         <div class="row-btns"><button type="button" class="chip danger" data-delacct="yes">${t("delYes")}</button><button type="button" class="chip" data-delacct="no">${t("delNo")}</button></div>` : ""}
     </section>`;
+  drawQrs();
 }
 
 /* Orders that still need something from the owner */
@@ -1489,6 +1535,12 @@ function acctClick(e) {
   }
   if (b.dataset.pay) { startPay(b.dataset.pay, b); return true; }
   if (b.dataset.copypay) { navigator.clipboard?.writeText(`${location.origin}/#pay/${b.dataset.copypay}`).then(() => toast(t("copied")), () => toast(`${location.origin}/#pay/${b.dataset.copypay}`)); return true; }
+  if (b.dataset.savetk) {
+    const id = b.dataset.savetk, v = $(`#tk-${id}`).value.trim();
+    if (v && !isTikkie(v)) { toast(t("tikkieBad")); return true; }
+    run(async () => { const { error } = await sb.from("orders").update({ pay_link: v || null }).eq("id", id); if (error) throw error; toast(t("saved")); renderAdmin(); });
+    return true;
+  }
   if (b.dataset.markpaid || b.dataset.settotal) {
     const id = b.dataset.markpaid || b.dataset.settotal;
     const patch = b.dataset.markpaid ? { paid_at: new Date().toISOString() } : { total: Math.max(0, Math.round(parseFloat($(`#tot-${id}`).value) * 100) / 100) };
@@ -1560,7 +1612,7 @@ function renderFaq() {
 /* Fill every piece of page text in the chosen language */
 function applyLang() {
   document.documentElement.lang = lang;
-  document.querySelectorAll("[data-t]").forEach(el => { el.innerHTML = t(el.dataset.t); });
+  document.querySelectorAll("[data-t]").forEach(el => { el.innerHTML = t(el.dataset.t === "s2p" && LOGIN_TO_ORDER && accountsOn() ? "s2pLogin" : el.dataset.t); });
   document.querySelectorAll("[data-lang]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
   $("#openCart").setAttribute("aria-label", t("cart"));
   $("#filters").setAttribute("aria-label", t("ariaFilter"));
